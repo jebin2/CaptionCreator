@@ -4,3 +4,5 @@ audio/
 video/
 ContentData/node_modules/
 ContentData/entries.db
+venv/
+__pycache__/

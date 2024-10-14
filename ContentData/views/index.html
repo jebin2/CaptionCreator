@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Upload Form</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #447c67;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"] {
+            width: 96%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        input[type="submit"], button {
+            background-color: #447c67;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        input[type="submit"]:hover, button:hover {
+            background-color: #2a5042;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .delete-button {
+            background-color: #447c67;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: #2a5042;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Upload Form</h1>
+    <form id="audioForm" enctype="multipart/form-data">
+        <label>Audio Path: <input type="text" name="audioPath" required /></label>
+        <label>Title: <input type="text" name="title" required /></label>
+        <label>Description: <input type="text" name="description" required /></label>
+        <label>Thumbnail Text: <input type="text" name="thumbnailText" required /></label>
+        <label>Answer: <input type="text" name="answer" required /></label>
+        <input type="submit" value="Submit" />
+    </form>
+    <button onclick="loadEntries()">View Entries</button>
+    <div id="entries"></div>
+    <script>
+        async function loadEntries() {
+            const response = await fetch('/entries');
+            const entries = await response.json();
+            const entriesDiv = document.getElementById('entries');
+            entriesDiv.innerHTML = '';
+            if (entries.length === 0) {
+                entriesDiv.innerHTML = '<p>No entries found.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            const header = document.createElement('tr');
+            header.innerHTML = '<th>ID</th><th>Audio Path</th><th>Title</th><th>Description</th><th>Thumbnail Text</th><th>Answer</th><th>Generated Video Path</th><th>Generated Thumbnail Path</th><th>Uploaded to YouTube</th><th>Uploaded to X</th><th>Actions</th>';
+            table.appendChild(header);
+            entries.forEach(entry => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.id}</td>
+                    <td>${entry.audioPath}</td>
+                    <td>${entry.title}</td>
+                    <td>${entry.description}</td>
+                    <td>${entry.thumbnailText}</td>
+                    <td>${entry.answer}</td>
+                    <td>${entry.generatedVideoPath || 'N/A'}</td>
+                    <td>${entry.generatedThumbnailPath || 'N/A'}</td>
+                    <td>${entry.uploadedToYoutube ? '✔️' : '❌'}</td>
+                    <td>${entry.uploadedToX ? '✔️' : '❌'}</td>
+                    <td><button class="delete-button" onclick="deleteEntry(${entry.id})">Delete</button></td>`;
+                table.appendChild(row);
+            });
+            entriesDiv.appendChild(table);
+        }
+
+        document.getElementById('audioForm').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/submit', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Entry submitted successfully!');
+                loadEntries();
+            } else {
+                alert('Error submitting entry.');
+            }
+        };
+
+        async function deleteEntry(id) {
+            const response = await fetch(`/delete/${id}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                alert('Entry deleted successfully!');
+                loadEntries(); // Refresh the entries
+            } else {
+                alert('Error deleting entry.');
+            }
+        }
+
+        window.onload = loadEntries;
+    </script>
+</body>
+</html>

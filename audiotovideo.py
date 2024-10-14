@@ -8,6 +8,7 @@ import sqlite3
 import logging
 
 BACKGROUND_IMAGES_N = 7  # Total number of background images available
+SHOW_ANSWER = False
 
 # Configure logging
 logging.basicConfig(
@@ -41,53 +42,87 @@ def create_text_image(text, background_path, temp_filename, font_size=70, img_si
     font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"  # Path to a bold font
     font = ImageFont.truetype(font_path, font_size)  # Load the bold font
 
+    # Function to wrap text into lines based on the width
+    def wrap_text(text, font, max_width):
+        wrapped_lines = []
+        lines = text.splitlines()
+        
+        for line in lines:
+            words = line.split()
+            current_line = ""
+            for word in words:
+                test_line = f"{current_line} {word}".strip()
+                bbox = draw.textbbox((0, 0), test_line, font=font)
+                line_width = bbox[2] - bbox[0]
+                if line_width <= max_width:
+                    current_line = test_line
+                else:
+                    wrapped_lines.append(current_line)
+                    current_line = word
+            wrapped_lines.append(current_line)
+        return wrapped_lines
+
     # Draw static text at the top
     if static_text:
-        static_font_size = int(font_size * 0.8)  # Slightly smaller font for static text
+        static_font_size = int(font_size * 0.5)  # Slightly smaller font for static text
         static_font = ImageFont.truetype(font_path, static_font_size)
-        static_text_bbox = draw.textbbox((0, 0), static_text, font=static_font)
-        static_text_width = static_text_bbox[2] - static_text_bbox[0]
-        static_x = (img_size[0] - static_text_width) / 2
+        max_static_width = img_size[0] - (2 * padding) - (2 * extra_space)
+
+        # Wrap the static text
+        wrapped_static_text = wrap_text(static_text, static_font, max_static_width)
+        
+        # Calculate y-position for the static text
+        total_static_height = len(wrapped_static_text) * (static_font_size + 10)
         static_y = padding
+        
         # Draw the black border (stroke) for the static text at the top
-        for dx in range(-stroke_width, stroke_width + 1):
-            for dy in range(-stroke_width, stroke_width + 1):
-                if dx != 0 or dy != 0:
-                    draw.text((static_x + dx, static_y + dy), static_text, font=static_font, fill="black")
-        draw.text((static_x, static_y), static_text, font=static_font, fill="white")
+        for i, line in enumerate(wrapped_static_text):
+            text_width = draw.textbbox((0, 0), line, font=static_font)[2] - draw.textbbox((0, 0), line, font=static_font)[0]
+            static_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+            
+            for dx in range(-stroke_width, stroke_width + 1):
+                for dy in range(-stroke_width, stroke_width + 1):
+                    if dx != 0 or dy != 0:
+                        draw.text((static_x + dx, static_y + i * (static_font_size + 10) + dy), line, font=static_font, fill="black")
+        
+        # Draw the white static text on top of the black stroke
+        for i, line in enumerate(wrapped_static_text):
+            text_width = draw.textbbox((0, 0), line, font=static_font)[2] - draw.textbbox((0, 0), line, font=static_font)[0]
+            static_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+            draw.text((static_x, static_y + i * (static_font_size + 10)), line, font=static_font, fill="white")
 
     # Draw static text at the bottom
     if bottom_static_text:
-        bottom_font_size = int(font_size * 0.8)
+        bottom_font_size = int(font_size * 0.5)
         bottom_font = ImageFont.truetype(font_path, bottom_font_size)
-        bottom_text_bbox = draw.textbbox((0, 0), bottom_static_text, font=bottom_font)
-        bottom_text_width = bottom_text_bbox[2] - bottom_text_bbox[0]
-        bottom_x = (img_size[0] - bottom_text_width) / 2
-        bottom_y = img_size[1] - bottom_text_bbox[3] - padding
+        max_bottom_width = img_size[0] - (2 * padding) - (2 * extra_space)
+
+        # Wrap the bottom static text with the prefix
+        wrapped_bottom_text = wrap_text("Answer is :: " + bottom_static_text, bottom_font, max_bottom_width)
+
+        # Calculate y-position for the bottom static text
+        total_bottom_height = len(wrapped_bottom_text) * (bottom_font_size + 10)
+        bottom_y = img_size[1] - total_bottom_height - padding
+
         # Draw the black border for bottom static text
-        for dx in range(-stroke_width, stroke_width + 1):
-            for dy in range(-stroke_width, stroke_width + 1):
-                if dx != 0 or dy != 0:
-                    draw.text((bottom_x + dx, bottom_y + dy), bottom_static_text, font=bottom_font, fill="black")
-        draw.text((bottom_x, bottom_y), bottom_static_text, font=bottom_font, fill="white")
+        for i, line in enumerate(wrapped_bottom_text):
+            text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
+            bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+            
+            for dx in range(-stroke_width, stroke_width + 1):
+                for dy in range(-stroke_width, stroke_width + 1):
+                    if dx != 0 or dy != 0:
+                        draw.text((bottom_x + dx, bottom_y + i * (bottom_font_size + 10) + dy), line, font=bottom_font, fill="black")
+
+        # Draw the white bottom static text on top of the black stroke
+        for i, line in enumerate(wrapped_bottom_text):
+            text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
+            bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+            draw.text((bottom_x, bottom_y + i * (bottom_font_size + 10)), line, font=bottom_font, fill="white")
 
     # Process the main text
-    wrapped_text = []
-    lines = text.splitlines()
-
-    for line in lines:
-        words = line.split()
-        current_line = ""
-        for word in words:
-            test_line = f"{current_line} {word}".strip()
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            line_width = bbox[2] - bbox[0]
-            if line_width <= img_size[0] - (2 * padding) - (2 * extra_space):
-                current_line = test_line
-            else:
-                wrapped_text.append(current_line)
-                current_line = word
-        wrapped_text.append(current_line)
+    max_text_width = img_size[0] - (2 * padding) - (2 * extra_space)
+    wrapped_text = wrap_text(text, font, max_text_width)
 
     total_height = len(wrapped_text) * (font_size + 10)
     x = (img_size[0] - (img_size[0] - (2 * padding) - (2 * extra_space))) / 2
@@ -124,7 +159,7 @@ def resize_thumbnail(thumbnail_path):
         
         # Save with reduced quality
         quality = 95  # Start with high quality
-        while file_size > max_file_size and quality > 20:  # Reduce until below 2 MB
+        while file_size > max_file_size:  # Reduce until below 2 MB
             img.save(thumbnail_path, format='PNG', quality=quality)  # Use 'PNG' or 'JPEG'
             file_size = os.path.getsize(thumbnail_path)
             quality -= 5  # Reduce quality
@@ -134,6 +169,18 @@ def resize_thumbnail(thumbnail_path):
         logging.info(f"Thumbnail {thumbnail_path} is within size limits.")
 
     return thumbnail_path
+
+def show_answer(end, total_duration, sentence, bottom_static_text):
+    global SHOW_ANSWER  # Declare SHOW_ANSWER as global to modify it
+    # Check if playback is within the last 8 seconds
+    is_within_last_8_seconds = (end >= total_duration - 8)
+    
+    # Check if the current sentence contains the bottom static text (case insensitive)
+    is_sentence_contains_bottom_text = bottom_static_text.lower() in sentence.lower()
+
+    SHOW_ANSWER = SHOW_ANSWER or is_sentence_contains_bottom_text or is_within_last_8_seconds
+    
+    return SHOW_ANSWER
 
 def create_video_from_audio(audio_path):
     """Create a video from audio with transcribed text as subtitles."""
@@ -147,17 +194,24 @@ def create_video_from_audio(audio_path):
     # Extract the filename without extension
     filename = os.path.basename(audio_path)
 
-    # Initialize static texts and output filename
-    top_static_text = ""
-    bottom_static_text = ""
+    # Initialize output filename
     output_filename = filename.replace(".wav", ".mp4")  # Default output filename
 
-    # Fetch thumbnailText from the database
     conn = sqlite3.connect('ContentData/entries.db')  # Connect to your database
     cursor = conn.cursor()
-    cursor.execute("SELECT thumbnailText FROM entries WHERE audioPath = ?", (audio_path,))
+    cursor.execute("""
+        SELECT thumbnailText, description, answer 
+        FROM entries 
+        WHERE audioPath = ?
+    """, (audio_path,))
+
     result = cursor.fetchone()
-    thumbnailText = result[0] if result else ""  # Ensure there is a valid result
+
+    # Extract values with default empty string if no result
+    thumbnailText = result[0] if result else ""
+    top_static_text = result[1] if result else ""
+    bottom_static_text = result[2] if result else ""
+
     conn.close()
 
     # Get a random background image for the video
@@ -185,7 +239,7 @@ def create_video_from_audio(audio_path):
     for start, end, sentence in subtitles:
         try:
             # Determine if we are in the last 4 seconds of the video
-            is_near_end = (end >= total_duration - 4)
+            is_near_end = show_answer(end, total_duration, sentence, bottom_static_text)
 
             # Create text image with the dynamic and static texts
             temp_image_path = create_text_image(

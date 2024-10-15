@@ -100,22 +100,25 @@ def post_to_x(title, thumbnail_path, description):
         resource_owner_secret=access_token_secret,
     )
 
-    # Step 1: Upload the image (thumbnail)
-    with open(thumbnail_path, 'rb') as image_file:
-        media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
-        response = oauth.post(media_upload_url, files={"media": image_file})
+    if os.path.exists(thumbnail_path) and os.path.isfile(thumbnail_path):
+        with open(thumbnail_path, 'rb') as image_file:
+            media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
+            response = oauth.post(media_upload_url, files={"media": image_file})
 
-    if response.status_code != 200:
-        raise Exception("Media upload failed: {} {}".format(response.status_code, response.text))
-    
-    media_id = response.json()['media_id_string']
-    print("Media uploaded successfully, media ID: {}".format(media_id))
+        if response.status_code != 200:
+            raise Exception("Media upload failed: {} {}".format(response.status_code, response.text))
 
-    # Step 2: Post the tweet with the title and the uploaded media
-    tweet_payload = {
-        "text": title,
-        "media": {"media_ids": [media_id]}  # Include the media ID
-    }
+        media_id = response.json()['media_id_string']
+        print("Media uploaded successfully, media ID: {}".format(media_id))
+
+        tweet_payload = {
+            "text": title,
+            "media": {"media_ids": [media_id]}  # Include the media ID
+        }
+    else:
+        tweet_payload = {
+            "text": title
+        }
 
     tweet_url_v2 = "https://api.twitter.com/2/tweets"
     response = oauth.post(tweet_url_v2, json=tweet_payload)
@@ -154,7 +157,7 @@ def process_entries_in_db():
         SELECT id, title, description, generatedThumbnailPath, youtubeVideoId 
         FROM entries 
         WHERE generatedThumbnailPath IS NOT NULL 
-        AND uploadedToX = 0
+        AND (uploadedToX = 0 OR uploadedToX IS NULL)
         AND uploadedToYoutube > 0
         AND uploadedToYoutube < ? 
     """, (int(time.time() * 1000) - 600000,))  # 10 minutes in millisecond

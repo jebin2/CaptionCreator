@@ -7,7 +7,7 @@ import random
 import sqlite3
 import logging
 
-BACKGROUND_IMAGES_N = 7  # Total number of background images available
+BACKGROUND_IMAGES_N = 6  # Total number of background images available
 SHOW_ANSWER = False
 
 # Configure logging
@@ -21,16 +21,27 @@ logging.basicConfig(
 
 def transcribe_audio(audio_path):
     """Transcribe the given audio file using Whisper."""
-    model = whisper.load_model("base")  # Choose the appropriate model size
-    result = model.transcribe(audio_path)
-    logging.info("Transcription completed.")
-    return result['text']
+    try:
+        logging.info(f"Loading Whisper model to transcribe audio: {audio_path}")
+        model = whisper.load_model("base")  # Choose the appropriate model size
+        result = model.transcribe(audio_path)
+        logging.info("Transcription completed successfully.")
+        return result['text']
+    except Exception as e:
+        logging.error(f"Failed to transcribe audio {audio_path}: {str(e)}")
+        return ""
 
 def get_random_background_image(n):
     """Select a random background image from the available ones."""
-    random_number = random.randint(1, n)
-    script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the script
-    return os.path.join(script_dir, "background_images", f"background-{random_number}.jpg")
+    try:
+        random_number = random.randint(1, n)
+        script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the script
+        background_path = os.path.join(script_dir, "background_images", f"background-{random_number}.jpg")
+        logging.info(f"Selected random background image: {background_path}")
+        return background_path
+    except Exception as e:
+        logging.error(f"Error selecting background image: {str(e)}")
+        return ""
 
 def create_text_image(text, background_path, temp_filename, font_size=70, img_size=(1920, 1080), padding=50, extra_space=100, stroke_width=2, static_text="", bottom_static_text=""):
     """Create an image with bold text, a black border around each letter, and static text at the top and bottom."""
@@ -172,17 +183,16 @@ def resize_thumbnail(thumbnail_path):
 
 def show_answer(end, total_duration, sentence, bottom_static_text):
     global SHOW_ANSWER  # Declare SHOW_ANSWER as global to modify it
-    # Check if playback is within the last 8 seconds
-    is_within_last_8_seconds = (end >= total_duration - 8)
     
     # Check if the current sentence contains the bottom static text (case insensitive)
     is_sentence_contains_bottom_text = bottom_static_text.lower() in sentence.lower()
 
-    SHOW_ANSWER = SHOW_ANSWER or is_sentence_contains_bottom_text or is_within_last_8_seconds
+    SHOW_ANSWER = SHOW_ANSWER or is_sentence_contains_bottom_text
     
     return SHOW_ANSWER
 
 def create_video_from_audio(audio_path):
+    SHOW_ANSWER = False
     """Create a video from audio with transcribed text as subtitles."""
     logging.info(f"Transcribing audio: {audio_path}")
     transcript = transcribe_audio(audio_path)

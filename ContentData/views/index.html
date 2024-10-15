@@ -120,8 +120,8 @@
                     <td>${entry.answer}</td>
                     <td>${entry.generatedVideoPath || 'N/A'}</td>
                     <td>${entry.generatedThumbnailPath || 'N/A'}</td>
-                    <td>${entry.uploadedToYoutube ? '✔️' : '❌'}</td>
-                    <td>${entry.uploadedToX ? '✔️' : '❌'}</td>
+                    <td>${entry.uploadedToYoutube != 0 ? '✔️' : '❌'}</td>
+                    <td>${entry.uploadedToX != 0 ? '✔️' : '❌'}</td>
                     <td><button class="delete-button" onclick="deleteEntry(${entry.id})">Delete</button></td>`;
                 table.appendChild(row);
             });

@@ -6,6 +6,7 @@ import time
 import random
 import sqlite3
 import logging
+import riddle_parser
 
 BACKGROUND_IMAGES_N = 6  # Total number of background images available
 SHOW_ANSWER = False
@@ -189,17 +190,13 @@ def show_answer(end, total_duration, sentence, bottom_static_text):
 def create_video_from_audio(audio_path):
     """Create a video from audio with transcribed text as subtitles."""
     logging.info(f"Starting video creation for audio: {audio_path}")
-    global SHOW_ANSWER
-    SHOW_ANSWER = False
     
     transcript = transcribe_audio(audio_path)
     if not transcript:
         logging.error("No transcript generated. Cannot create video.")
         return
-
-    filename = os.path.basename(audio_path)
-    output_filename = filename.replace(".wav", ".mp4")
-
+    
+    # Retrieve metadata from the database
     conn = sqlite3.connect('ContentData/entries.db')
     cursor = conn.cursor()
     cursor.execute("SELECT thumbnailText, description, answer FROM entries WHERE audioPath = ?", (audio_path,))
@@ -207,58 +204,104 @@ def create_video_from_audio(audio_path):
     thumbnailText, top_static_text, bottom_static_text = result if result else ("", "", "")
     conn.close()
 
-    logging.info(f"Retrieved metadata: thumbnailText='{thumbnailText}', top_static_text='{top_static_text}', bottom_static_text='{bottom_static_text}'")
+    # Process transcript with riddle_parser (which should add --#start#--, --#answer#--, --#end#--)
+    transcript = riddle_parser.process_convo_text(transcript, top_static_text)
+    
+    highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
+                                    .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
+                                    .replace('--#answer#--', '\033[1;34m--#answer#--\033[0m')
+    
+    logging.info(f"Parsed transcript: {highlighted_transcript}")
 
+    # Extract file name for output
+    filename = os.path.basename(audio_path)
+    output_filename = filename.replace(".wav", ".mp4")
+    
+    logging.info(f"Retrieved metadata: thumbnailText='{thumbnailText}', top_static_text='{top_static_text}', bottom_static_text='{bottom_static_text}'")
+    
+    # Load background image
     background_path = get_random_background_image(BACKGROUND_IMAGES_N)
     audio = AudioFileClip(audio_path)
     total_duration = audio.duration
-
-    logging.info(f"Processing transcript for video creation")
+    
+    # Split transcript into sentences and calculate total words
     sentences = transcript.split('. ')
     total_words = sum(len(sentence.split()) for sentence in sentences)
     
     subtitles = []
     current_time = 0
+    skip_mode = True  # Start in skip mode until --#start#--
+    show_bottom_text = False
+    start_time = None
+    end_time = None
+
     for sentence in sentences:
+        if "--#start#--" in sentence:
+            skip_mode = False  # Start including audio and subtitles after --#start#--
+            start_time = current_time  # Mark the start time for trimming
+            sentence = sentence.replace("--#start#--", "")
+        
+        if "--#end#--" in sentence:
+            end_time = current_time  # Mark the end time for trimming
+            break  # Stop processing after --#end#--
+
+        if skip_mode:
+            current_time += (len(sentence.split()) / total_words) * total_duration if total_words > 0 else 0
+            continue  # Skip content before --#start#--
+
+        if "--#answer#--" in sentence:
+            show_bottom_text = True  # Start showing bottom static text after --#answer#--
+            sentence = sentence.replace("--#answer#--", "")
+            logging.info(f"show answer true")
+
+        # Calculate sentence duration based on word count
         word_count = len(sentence.split())
         sentence_duration = (word_count / total_words) * total_duration if total_words > 0 else 0
-        end_time = current_time + sentence_duration
-        subtitles.append((current_time, end_time, sentence))
-        current_time = end_time
+        end_time_sentence = current_time + sentence_duration
+        subtitles.append((current_time, end_time_sentence, sentence, show_bottom_text))
+        current_time = end_time_sentence
+
+    if start_time is None or end_time is None:
+        logging.error("Could not determine valid start and end times for trimming. Check transcript markers.")
+        trimmed_audio = audio  # Keep the original audio if times are invalid
+    else:
+        trimmed_audio = audio.subclip(start_time, end_time)  # Trim the audio if both times are valid
 
     txt_clips = []
-    for start, end, sentence in subtitles:
+    for start, end, sentence, show_bottom in subtitles:
         try:
-            is_near_end = show_answer(end, total_duration, sentence, bottom_static_text)
+            # If near the answer, show the bottom static text
             temp_image_path = create_text_image(
                 sentence, 
                 background_path,
                 "temp_text_image.png",
-                static_text=top_static_text,  
-                bottom_static_text=bottom_static_text if is_near_end else ""
+                static_text=top_static_text,
+                bottom_static_text=bottom_static_text if show_bottom else ""
             )
-            clip = ImageClip(temp_image_path).set_duration(end - start).set_start(start)
+            clip = ImageClip(temp_image_path).set_duration(end - start).set_start(start - start_time)  # Adjust start time
             txt_clips.append(clip)
             os.remove(temp_image_path)
             logging.info(f"Created text clip for time range: {start:.2f} - {end:.2f}")
         except Exception as e:
             logging.error(f"Error creating text clip: {str(e)}", exc_info=True)
-
+    
     if not txt_clips:
         logging.error("No text clips could be created. Cannot generate video.")
         return
 
+    # Combine subtitle clips and audio into a single video
     subtitles_clip = CompositeVideoClip(txt_clips)
-    video = CompositeVideoClip([subtitles_clip.set_audio(audio)])
-    
+    video = CompositeVideoClip([subtitles_clip.set_audio(trimmed_audio)])  # Use trimmed audio here
+
+    # Output video file
     output_path = os.path.join("video", output_filename)
     logging.info(f"Rendering video: {output_path}")
     video.write_videofile(output_path, fps=24)
     logging.info(f"Video saved as {output_path}")
-
+    
+    # Generate and save the thumbnail
     thumbnail_filename = f"{os.path.splitext(output_filename)[0]}-thumbnail.png"
     thumbnail_path = os.path.join("video", thumbnail_filename)
-
     try:
         create_text_image(
             thumbnailText, 
@@ -270,7 +313,8 @@ def create_video_from_audio(audio_path):
         logging.info(f"Thumbnail created: {thumbnail_path}")
     except Exception as e:
         logging.error(f"Error generating thumbnail: {str(e)}", exc_info=True)
-
+    
+    # Resize the thumbnail
     resize_thumbnail(thumbnail_path)
     update_video_generated(audio_path, output_path, thumbnail_path)
 
@@ -298,7 +342,7 @@ def check_for_new_entries():
     cursor = conn.cursor()
     
     while True:
-        cursor.execute("SELECT audioPath FROM entries WHERE generatedVideoPath IS NULL")
+        cursor.execute("SELECT audioPath FROM entries WHERE generatedVideoPath IS NULL OR generatedVideoPath = ''")
         new_entries = cursor.fetchall()
         
         for (audio_path,) in new_entries:

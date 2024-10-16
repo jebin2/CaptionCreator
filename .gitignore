@@ -9,3 +9,4 @@ venv/
 __pycache__/
 xcredentials.json
 riddleformat.txt
+output_file.mp3

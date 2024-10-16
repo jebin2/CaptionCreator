@@ -1,0 +1,77 @@
+response = ollama.chat(model='llama3.2', messages=[
+    {
+        'role': 'user',
+        'content': f"""
+        Analyze the following transcription and extract the exact text for these elements:
+
+        Riddle: {riddle}
+        Answer: {answer}
+        Transcription: {transcript}
+
+        CRITICAL: You must ONLY respond with a JSON object. Do not include ANY other text, explanation, or formatting.
+        The response must be in this exact format:
+
+        {{
+            "start": "extracted text for riddle start",
+            "answer": "extracted text for riddle answer",
+            "end": "extracted text for riddle end"
+        }}
+
+        Extraction rules:
+        1. Riddle Start: The exact text where the actual riddle question or statement begins. Consider the broader context to avoid false positives.
+        
+        2. Riddle Answer: The exact text where the solution is first mentioned or explained.
+        
+        3. Riddle End: IMPORTANT - Search for this ONLY in the text that appears AFTER the Riddle Answer text you identified above. Find the last sentence explaining the answer, before any general discussion.
+
+        Notes:
+        - You must output ONLY the JSON object, nothing else
+        - No numbered lists, no explanations, no other text
+        - Extract text in chronological order: start > answer > end
+        - End text MUST appear after answer text in transcript
+        - Use empty string if any element isn't found
+        - The end text must be found after the answer text
+        """
+    }
+])
+
+
+response = ollama.chat(model='llama3.2', messages=[
+    {
+        'role': 'user',
+        'content': f"""
+        Analyze the following transcription and extract the exact text for these elements:
+
+        Riddle: {riddle}
+        Answer: {answer}
+        Transcription: {transcript}
+
+        1. Riddle Start: The exact text where the actual riddle question or statement begins. Consider the broader context to avoid false positives. Look for first clear indication of a actual riddle about to present/start.
+        
+        2. Riddle Answer: The exact text where the solution is first mentioned or explained. Look for any clear solution indication.
+        
+        3. Riddle End: IMPORTANT - Search for this ONLY in the text that appears AFTER the Riddle Answer text you identified above. Find the exact text of the last sentence explaining the answer, before any general discussion or reflection. This should be the conclusion of the direct answer explanation.
+
+        It is Mandatory to provide the response as a JSON object with the extracted text everytime:
+
+        {{
+            "start": "extracted text for riddle start",
+            "answer": "extracted text for riddle answer",
+            "end": "extracted text for riddle end"
+        }}
+
+        Extraction Process:
+        1. First identify and extract the start text
+        2. Then find and extract the answer text
+        3. Finally, look ONLY in the remaining text AFTER the answer text to find the end text
+        
+        Note: 
+        - Be precise in identifying these text excerpts
+        - Extract only the specific riddle question or statement, not general discussion
+        - Use an empty string for any element you can't find clear text for
+        - Maintain chronological order: start text must come before answer text, which must come before end text
+        - The end text MUST be found after the answer text in the transcript
+        - If you can't find an end text that appears after the answer text, return an empty string for end
+        """
+    }
+])

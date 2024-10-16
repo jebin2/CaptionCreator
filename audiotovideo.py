@@ -24,12 +24,13 @@ def transcribe_audio(audio_path):
         logging.info(f"Starting audio transcription for: {audio_path}")
         model = whisper.load_model("base")
         logging.info("Whisper model loaded successfully")
-        result = model.transcribe(audio_path)
+        result = model.transcribe(audio_path, word_timestamps=True)
         logging.info(f"Transcription completed successfully for: {audio_path}")
-        return result['text']
+        
+        return result['text'], result['segments']
     except Exception as e:
         logging.error(f"Failed to transcribe audio {audio_path}: {str(e)}", exc_info=True)
-        return ""
+        return "", []
 
 def get_random_background_image(n):
     """Select a random background image from the available ones."""
@@ -187,11 +188,30 @@ def show_answer(end, total_duration, sentence, bottom_static_text):
     logging.info(f"Show answer status: {SHOW_ANSWER}")
     return SHOW_ANSWER
 
+def find_segment_time(sentence, segments, type, checkAfterSegment):
+    sentence = sentence.strip().lower()  # Normalize the sentence for better matching
+    sendNextWordStartTime = False
+    for i, segment in enumerate(segments):
+        if checkAfterSegment is None or checkAfterSegment["id"] >= segment["id"] :
+            segment_text = segment['text'].strip().lower()
+            if sendNextWordStartTime:
+                return segment
+            if sentence in segment_text:
+                if type == "start":
+                    return segment
+                else:
+                    if i == len(segments) - 1:
+                        return segment
+                    sendNextWordStartTime = True
+
+    return None
+
+
 def create_video_from_audio(audio_path):
     """Create a video from audio with transcribed text as subtitles."""
     logging.info(f"Starting video creation for audio: {audio_path}")
     
-    transcript = transcribe_audio(audio_path)
+    transcript, segments = transcribe_audio(audio_path)
     if not transcript:
         logging.error("No transcript generated. Cannot create video.")
         return
@@ -205,12 +225,11 @@ def create_video_from_audio(audio_path):
     conn.close()
 
     # Process transcript with riddle_parser (which should add --#start#--, --#answer#--, --#end#--)
-    transcript = riddle_parser.process_convo_text(transcript, top_static_text)
+    transcript = riddle_parser.process_convo_text(transcript, top_static_text, bottom_static_text)
     
     highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
-                                    .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
-                                    .replace('--#answer#--', '\033[1;34m--#answer#--\033[0m')
-    
+                                        .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
+                                        .replace('--#answer#--', '\033[1;34m--#answer#--\033[0m')
     logging.info(f"Parsed transcript: {highlighted_transcript}")
 
     # Extract file name for output
@@ -222,66 +241,73 @@ def create_video_from_audio(audio_path):
     # Load background image
     background_path = get_random_background_image(BACKGROUND_IMAGES_N)
     audio = AudioFileClip(audio_path)
-    total_duration = audio.duration
     
     # Split transcript into sentences and calculate total words
     sentences = transcript.split('. ')
-    total_words = sum(len(sentence.split()) for sentence in sentences)
-    
-    subtitles = []
-    current_time = 0
-    skip_mode = True  # Start in skip mode until --#start#--
-    show_bottom_text = False
-    start_time = None
-    end_time = None
+    start_segment = None
+    end_segment = None
+    show_ans_time = None
 
     for sentence in sentences:
         if "--#start#--" in sentence:
-            skip_mode = False  # Start including audio and subtitles after --#start#--
-            start_time = current_time  # Mark the start time for trimming
             sentence = sentence.replace("--#start#--", "")
+            start_segment = find_segment_time(sentence, segments, "start", None)
         
         if "--#end#--" in sentence:
-            end_time = current_time  # Mark the end time for trimming
-            break  # Stop processing after --#end#--
-
-        if skip_mode:
-            current_time += (len(sentence.split()) / total_words) * total_duration if total_words > 0 else 0
-            continue  # Skip content before --#start#--
+            sentence = sentence.replace("--#end#--", "")
+            end_segment = find_segment_time(sentence, segments, "end", start_segment)
+            tempVal = None
+            if len(sentence.split(", ")) > 1:
+                for sen in sentence.split(", "):
+                    tempVal = find_segment_time(sen, segments, "end", start_segment)
+                    end_segment = tempVal if None else end_segment
+            if len(sentence.split("? ")) > 1:
+                for sen in sentence.split("? "):
+                    tempVal = find_segment_time(sen, segments, "end", start_segment)
+                    end_segment = tempVal if None else end_segment
+            if len(sentence.split("! ")) > 1:
+                for sen in sentence.split("! "):
+                    tempVal = find_segment_time(sen, segments, "end", start_segment)
+                    end_segment = tempVal if None else end_segment
 
         if "--#answer#--" in sentence:
-            show_bottom_text = True  # Start showing bottom static text after --#answer#--
             sentence = sentence.replace("--#answer#--", "")
-            logging.info(f"show answer true")
+            show_ans_time = find_segment_time(sentence, segments, "start", start_segment)
 
-        # Calculate sentence duration based on word count
-        word_count = len(sentence.split())
-        sentence_duration = (word_count / total_words) * total_duration if total_words > 0 else 0
-        end_time_sentence = current_time + sentence_duration
-        subtitles.append((current_time, end_time_sentence, sentence, show_bottom_text))
-        current_time = end_time_sentence
-
-    if start_time is None or end_time is None:
+    if start_segment is None or end_segment is None:
         logging.error("Could not determine valid start and end times for trimming. Check transcript markers.")
         trimmed_audio = audio  # Keep the original audio if times are invalid
     else:
-        trimmed_audio = audio.subclip(start_time, end_time)  # Trim the audio if both times are valid
+        trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
+
+        # Create a composite audio clip
+        final_audio = CompositeAudioClip([trimmed_audio])
+        final_audio.fps = audio.fps
+        # Write the result to a file
+        final_audio.write_audiofile("output_file.mp3")
+
+        transcript, segments = transcribe_audio("output_file.mp3")
 
     txt_clips = []
-    for start, end, sentence, show_bottom in subtitles:
+    for i, segment in enumerate(segments):
         try:
             # If near the answer, show the bottom static text
             temp_image_path = create_text_image(
-                sentence, 
+                segment["text"], 
                 background_path,
                 "temp_text_image.png",
                 static_text=top_static_text,
-                bottom_static_text=bottom_static_text if show_bottom else ""
+                bottom_static_text="" if show_ans_time is None else bottom_static_text
             )
-            clip = ImageClip(temp_image_path).set_duration(end - start).set_start(start - start_time)  # Adjust start time
+            if i < len(segments) - 1:
+                duration = round(segments[i + 1]["end"] - segment["start"], 2)
+            else:
+                duration = round(segment["end"] - segment["start"], 2)
+            clip = ImageClip(temp_image_path).set_duration(duration).set_start(segment["start"])
             txt_clips.append(clip)
             os.remove(temp_image_path)
-            logging.info(f"Created text clip for time range: {start:.2f} - {end:.2f}")
+            logging.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
+
         except Exception as e:
             logging.error(f"Error creating text clip: {str(e)}", exc_info=True)
     

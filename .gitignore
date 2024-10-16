@@ -8,3 +8,4 @@ ContentData/entries.db
 venv/
 __pycache__/
 xcredentials.json
+riddleformat.txt

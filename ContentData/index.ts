@@ -24,7 +24,7 @@ function log(message: string) {
 }
 
 // Create and initialize the database
-async function initDatabase(alter = false) {  // Set default to false
+async function initDatabase(alter = false) {
 	const db = await Database.open("entries.db");
 
 	try {
@@ -67,7 +67,13 @@ async function backupDatabase() {
 	}
 }
 
-let dbPromise = initDatabase();  // Default alter is false unless needed
+let dbPromise = initDatabase();
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*', // Change to your specific domain in production
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
 
 serve({
 	async fetch(req) {
@@ -75,6 +81,13 @@ serve({
 		const { pathname } = url;
 
 		try {
+			if (req.method === "OPTIONS") {
+				return new Response(null, {
+					status: 204,
+					headers: corsHeaders,
+				});
+			}
+			
 			// Serve HTML file for the main page
 			if (req.method === "GET" && pathname === "/") {
 				log("Serving main page...");
@@ -106,8 +119,9 @@ serve({
 						[audioPath, title, description, thumbnailText, answer, generatedVideoPath, generatedThumbnailPath, uploadedToYoutube, uploadedToX]);
 
 					log("Entry submitted: " + JSON.stringify({ audioPath, title, description }));
-					await backupDatabase();  // Create a backup after inserting an entry
-					return new Response("Entry submitted successfully!", { status: 201 });
+					await backupDatabase();
+					return new Response("Entry submitted successfully!", { status: 201,
+						headers: corsHeaders, });
 				});
 			}
 
@@ -118,9 +132,37 @@ serve({
 				const db = await dbPromise;
 				await db.run(`DELETE FROM entries WHERE id = ?`, [id]);
 				log(`Entry with ID ${id} deleted.`);
-				await backupDatabase();  // Create a backup after deleting an entry
-				return new Response("Entry deleted successfully!", { status: 204 });
+				await backupDatabase();
+				return new Response("Entry deleted successfully!", { status: 204,
+					headers: corsHeaders, });
 			}
+
+			// Handle PUT request to update an entry
+			else if (req.method === "PUT" && pathname.startsWith("/update/")) {
+				const id = pathname.split("/").pop();
+				log(`Updating entry with ID ${id}...`); // Log the ID being updated
+
+				try {
+					const data = await req.json();
+					log(`Received data for update: ${JSON.stringify(data)}`); // Log the incoming data
+
+					const { audioPath, title, description, thumbnailText, answer, generatedVideoPath, generatedThumbnailPath, uploadedToYoutube, uploadedToX, youtubeVideoId, tweetId } = data;
+
+					const db = await dbPromise;
+					await db.run(`UPDATE entries SET audioPath = ?, title = ?, description = ?, thumbnailText = ?, answer = ?, generatedVideoPath = ?, generatedThumbnailPath = ?, uploadedToYoutube = ?, uploadedToX = ?, youtubeVideoId = ?, tweetId = ? WHERE id = ?`,
+						[audioPath, title, description, thumbnailText, answer, generatedVideoPath, generatedThumbnailPath, uploadedToYoutube, uploadedToX, youtubeVideoId, tweetId, id]);
+
+					log(`Entry with ID ${id} updated.`);
+					await backupDatabase();
+					return new Response("Entry updated successfully!", { status: 200,
+						headers: corsHeaders, });
+				} catch (error) {
+					log("Error updating entry: " + error);
+					return new Response("Failed to update entry.", { status: 500,
+						headers: corsHeaders, });
+				}
+			}
+
 
 			// Handle GET request for entries (JSON)
 			else if (req.method === "GET" && pathname === "/entries") {
@@ -129,13 +171,14 @@ serve({
 				const entries: Entry[] = await db.all("SELECT * FROM entries");
 				log(`Fetched ${entries.length} entries.`);
 				return new Response(JSON.stringify(entries), {
-					headers: { "Content-Type": "application/json" },
+					headers: { "Content-Type": "application/json", ...corsHeaders },
 				});
 			}
 
 			// Return 404 for any other paths
 			log("Path not found: " + pathname);
-			return new Response("Not Found", { status: 404 });
+			return new Response("Not Found", { status: 404,
+				headers: corsHeaders, });
 
 		} catch (error) {
 			log("Error during request handling: " + error);

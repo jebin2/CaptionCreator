@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,37 +13,36 @@
             margin: 0;
             padding: 20px;
         }
+
         h1 {
             text-align: center;
             color: #447c67;
             text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
         }
+
         form {
-            max-width: 500px;
             margin: 0 auto;
             background: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
+
         label {
             display: block;
             margin: 10px 0 5px;
         }
-        input[type="text"] {
+
+        input[type="text"],
+        input[type="file"] {
             width: 96%;
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-        input[type="submit"], button {
+
+        input[type="submit"],
+        button {
             background-color: #447c67;
             color: white;
             border: none;
@@ -52,67 +52,221 @@
             margin-top: 10px;
             width: 100%;
         }
-        input[type="submit"]:hover, button:hover {
+
+        input[type="submit"]:hover,
+        button:hover {
             background-color: #2a5042;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
-        th, td {
+
+        th,
+        td {
             padding: 8px;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
-        .delete-button {
+
+        .delete-button,
+        .edit-button {
             background-color: #447c67;
             color: white;
             border: none;
             border-radius: 5px;
-            padding: 5px 10px;
             cursor: pointer;
         }
-        .delete-button:hover {
+
+        .delete-button:hover,
+        .edit-button:hover {
             background-color: #2a5042;
         }
+
+        /* Modal background */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            /* Centering the modal */
+            width: 100%;
+            /* Max width for larger screens */
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        /* Modal content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            /* Could be more or less, depending on screen size */
+            max-width: 600px;
+            /* Max width for larger screens */
+            border-radius: 10px;
+            /* Rounded corners */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            /* Subtle shadow */
+        }
+
+        /* Close button styling */
+        .close {
+            color: #aaa;
+            /* Light gray */
+            float: right;
+            /* Position to the right */
+            font-size: 28px;
+            /* Large size */
+            font-weight: bold;
+            /* Bold text */
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            /* Darker gray on hover */
+            text-decoration: none;
+            /* No underline */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+        }
+        #entriesTable {
+    width: 100%; /* Make the table take the full width of the container */
+    margin: 0 auto; /* Center the table horizontally */
+    border-collapse: collapse; /* Combine borders of table cells */
+}
+
+#entriesTable th,
+#entriesTable td {
+    word-break: break-all;
+    padding: 8px; /* Add some padding */
+    text-align: left; /* Align text to the left */
+    border: 1px solid #ddd; /* Border for table cells */
+}
+
     </style>
 </head>
+
 <body>
-    <h1>Audio Upload Form</h1>
-    <form id="audioForm" enctype="multipart/form-data">
-        <label>Audio Path: <input type="text" name="audioPath" required /></label>
-        <label>Title: <input type="text" name="title" required /></label>
-        <label>Description: <input type="text" name="description" required /></label>
-        <label>Thumbnail Text: <input type="text" name="thumbnailText" required /></label>
-        <label>Answer: <input type="text" name="answer" required /></label>
-        <input type="submit" value="Submit" />
+    <h1>Audio Entry Submission</h1>
+    <form id="audioForm" style="display: flex; flex-wrap: wrap;">
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Audio Path: <input type="text" name="audioPath" required /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Title: <input type="text" name="title" required /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Description: <input type="text" name="description" required /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Thumbnail Text: <input type="text" name="thumbnailText" required /></label>
+        </div>
+
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Answer: <input type="text" name="answer" required /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Generated Video Path: <input type="text" name="generatedVideoPath" /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Generated Thumbnail Path: <input type="text" name="generatedThumbnailPath" /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Uploaded to YouTube: <input type="text" name="uploadedToYoutube" /></label>
+        </div>
+
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Uploaded to X: <input type="text" name="uploadedToX" /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>YouTube Video ID: <input type="text" name="youtubeVideoId" /></label>
+        </div>
+        <div style="flex: 1 1 48%; padding: 5px;">
+            <label>Tweet ID: <input type="text" name="tweetId" /></label>
+        </div>
+
+        <div style="flex: 1 1 100%; padding: 5px;">
+            <input type="submit" value="Submit" />
+        </div>
     </form>
-    <button onclick="loadEntries()">View Entries</button>
-    <div id="entries"></div>
+
+
+
+    <h2>Audio Entries</h2>
+    <table id="entriesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Audio Path</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Thumbnail Text</th>
+                <th>Answer</th>
+                <th>Generated Video Path</th>
+                <th>Generated Thumbnail Path</th>
+                <th>Uploaded to YouTube</th>
+                <th>Uploaded to X</th>
+                <th>YouTube Video ID</th>
+                <th>Tweet ID</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="entriesBody"></tbody>
+    </table>
+
     <script>
+        const form = document.getElementById('audioForm');
+        const entriesBody = document.getElementById('entriesBody');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(form);
+            const response = await fetch('/submit', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                alert("Entry submitted successfully!");
+                loadEntries(); // Reload entries after submission
+                form.reset(); // Clear the form
+            } else {
+                alert("Error submitting entry.");
+            }
+        });
+
         async function loadEntries() {
             const response = await fetch('/entries');
             const entries = await response.json();
-            const entriesDiv = document.getElementById('entries');
-            entriesDiv.innerHTML = '';
-            if (entries.length === 0) {
-                entriesDiv.innerHTML = '<p>No entries found.</p>';
-                return;
-            }
-            const table = document.createElement('table');
-            const header = document.createElement('tr');
-            header.innerHTML = '<th>ID</th><th>Audio Path</th><th>Title</th><th>Description</th><th>Thumbnail Text</th><th>Answer</th><th>Generated Video Path</th><th>Generated Thumbnail Path</th><th>Uploaded to YouTube</th><th>Uploaded to X</th><th>Actions</th>';
-            table.appendChild(header);
+            entriesBody.innerHTML = ''; // Clear current entries
+
             entries.forEach(entry => {
                 const row = document.createElement('tr');
+                row.setAttribute('data-id', entry.id); // Set data-id attribute
                 row.innerHTML = `
                     <td>${entry.id}</td>
+                    <td>
+                        <button class="edit-button" onclick="editEntry(${entry.id})">Edit</button>
+                        <button class="delete-button" onclick="deleteEntry(${entry.id})">Delete</button>
+                    </td>
                     <td>${entry.audioPath}</td>
                     <td>${entry.title}</td>
                     <td>${entry.description}</td>
@@ -120,43 +274,122 @@
                     <td>${entry.answer}</td>
                     <td>${entry.generatedVideoPath || 'N/A'}</td>
                     <td>${entry.generatedThumbnailPath || 'N/A'}</td>
-                    <td>${entry.uploadedToYoutube != 0 ? '✔️' : '❌'}</td>
-                    <td>${entry.uploadedToX != 0 ? '✔️' : '❌'}</td>
-                    <td><button class="delete-button" onclick="deleteEntry(${entry.id})">Delete</button></td>`;
-                table.appendChild(row);
+                    <td>${entry.uploadedToYoutube ? '✔️' : '❌'}</td>
+                    <td>${entry.uploadedToX ? '✔️' : '❌'}</td>
+                    <td>${entry.youtubeVideoId || 'N/A'}</td>
+                    <td>${entry.tweetId || 'N/A'}</td>`;
+                entriesBody.appendChild(row);
             });
-            entriesDiv.appendChild(table);
         }
-
-        document.getElementById('audioForm').onsubmit = async function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-            const response = await fetch('/submit', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                alert('Entry submitted successfully!');
-                loadEntries();
-            } else {
-                alert('Error submitting entry.');
-            }
-        };
 
         async function deleteEntry(id) {
             const response = await fetch(`/delete/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
+
             if (response.ok) {
-                alert('Entry deleted successfully!');
-                loadEntries(); // Refresh the entries
+                alert("Entry deleted successfully!");
+                loadEntries(); // Reload entries after deletion
             } else {
-                alert('Error deleting entry.');
+                alert("Error deleting entry.");
             }
         }
 
+        // Open the modal and populate it with the entry details
+        function openModal() {
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        // Close the modal if the user clicks anywhere outside of it
+        window.onclick = function (event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        async function editEntry(id) {
+            const row = entriesBody.querySelector(`tr[data-id='${id}']`);
+            if (!row) {
+                console.error(`No row found with ID: ${id}`);
+                return;
+            }
+            const cells = row.querySelectorAll('td');
+
+            // Populate the modal fields with the current entry details
+            document.getElementById('editId').value = id;
+            document.getElementById('editAudioPath').value = cells[2].innerText;
+            document.getElementById('editTitle').value = cells[3].innerText;
+            document.getElementById('editDescription').value = cells[4].innerText;
+            document.getElementById('editThumbnailText').value = cells[5].innerText;
+            document.getElementById('editAnswer').value = cells[6].innerText;
+            document.getElementById('editGeneratedVideoPath').value = cells[7].innerText;
+            document.getElementById('editGeneratedThumbnailPath').value = cells[8].innerText;
+            document.getElementById('editUploadedToYoutube').checked = cells[9].innerText === '✔️';
+            document.getElementById('editUploadedToX').checked = cells[10].innerText === '✔️';
+            document.getElementById('editYoutubeVideoId').value = cells[11].innerText;
+            document.getElementById('editTweetId').value = cells[12].innerText;
+
+            openModal();
+        }
+
+        async function updateEntry(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const formData = new FormData(event.target);
+
+            // Convert FormData to a JSON object
+            const data = Object.fromEntries(formData);
+
+            const response = await fetch(`/update/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(data), // Ensure the body is a JSON string
+                headers: { 'Content-Type': 'application/json' }, // Set the correct content type
+            });
+
+            if (response.ok) {
+                alert("Entry updated successfully!");
+                closeModal();
+                loadEntries(); // Reload entries after update
+            } else {
+                alert("Error updating entry.");
+            }
+        }
+
+
+        // Load entries on page load
         window.onload = loadEntries;
     </script>
+
+    <div id="editModal" class="modal"> <!-- Added class 'modal' -->
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <form id="editForm" onsubmit="updateEntry(event)">
+                <input type="hidden" id="editId" name="editId" />
+                <label>Audio Path: <input type="text" id="editAudioPath" name="audioPath" required /></label>
+                <label>Title: <input type="text" id="editTitle" name="title" required /></label>
+                <label>Description: <input type="text" id="editDescription" name="description" required /></label>
+                <label>Thumbnail Text: <input type="text" id="editThumbnailText" name="thumbnailText"
+                        required /></label>
+                <label>Answer: <input type="text" id="editAnswer" name="answer" required /></label>
+                <label>Generated Video Path: <input type="text" id="editGeneratedVideoPath"
+                        name="generatedVideoPath" /></label>
+                <label>Generated Thumbnail Path: <input type="text" id="editGeneratedThumbnailPath"
+                        name="generatedThumbnailPath" /></label>
+                <label>Uploaded to YouTube: <input type="checkbox" id="editUploadedToYoutube"
+                        name="uploadedToYoutube" /></label>
+                <label>Uploaded to X: <input type="checkbox" id="editUploadedToX" name="uploadedToX" /></label>
+                <label>YouTube Video ID: <input type="text" id="editYoutubeVideoId" name="youtubeVideoId" /></label>
+                <label>Tweet ID: <input type="text" id="editTweetId" name="tweetId" /></label>
+                <button type="submit">Update Entry</button>
+            </form>
+        </div>
+    </div>
+
 </body>
+
 </html>

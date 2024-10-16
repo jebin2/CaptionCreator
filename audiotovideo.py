@@ -246,7 +246,7 @@ def create_video_from_audio(audio_path):
     sentences = transcript.split('. ')
     start_segment = None
     end_segment = None
-    show_ans_time = None
+    show_ans_segment = None
 
     for sentence in sentences:
         if "--#start#--" in sentence:
@@ -298,7 +298,7 @@ def create_video_from_audio(audio_path):
                 background_path,
                 "temp_text_image.png",
                 static_text=top_static_text,
-                bottom_static_text="" if show_ans_time["start"] < segment["start"] else bottom_static_text
+                bottom_static_text="" if show_ans_segment["start"] < segment["start"] else bottom_static_text
             )
             if i < len(segments) - 1:
                 duration = round(segments[i + 1]["end"] - segment["start"], 2)

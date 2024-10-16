@@ -13,11 +13,11 @@ def get_ollama_output(transcript, riddle):
                 Riddle: {riddle}
                 Transcription: {transcript}
 
-                1. Riddle Start: The exact text where the actual riddle question or statement begins. Look for first clear indication of a actual riddle about to present/start.
+                1. Riddle Start: The exact text where the actual riddle question or statement begins. Consider the broader context to avoid false positives. Look for first clear indication of a actual riddle about to present/start.
 
                 2. Riddle Answer: The exact text where the solution is first mentioned or explained. Look for any clear solution indication.
 
-                3. Riddle End: The exact text of the last sentence explaining the answer, before any general discussion or reflection. Focus on the conclusion of the explanation, not necessarily the end of all riddle-related talk.
+                3. Riddle End: The exact text of the last word of that sentences explaining the answer, before any general discussion or reflection. Focus on the conclusion of the explanation, not necessarily the end of all riddle-related talk.
 
                 Provide the response as a JSON object with the extracted text:
 
@@ -75,6 +75,9 @@ def calculate_positions(transcript, riddle_data):
                     positions[key] = -1
         else:
             positions[key] = -1
+        if key == "end" and positions[key] != -1:
+            positions[key] = positions[key] + len(text)
+
     return positions
 
 def insert_text(original_string, text_to_insert, index):

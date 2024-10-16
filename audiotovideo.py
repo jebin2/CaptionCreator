@@ -272,13 +272,14 @@ def create_video_from_audio(audio_path):
 
         if "--#answer#--" in sentence:
             sentence = sentence.replace("--#answer#--", "")
-            show_ans_time = find_segment_time(sentence, segments, "start", start_segment)
+            show_ans_segment = find_segment_time(sentence, segments, "start", start_segment)
 
     if start_segment is None or end_segment is None:
         logging.error("Could not determine valid start and end times for trimming. Check transcript markers.")
         trimmed_audio = audio  # Keep the original audio if times are invalid
     else:
         trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
+        show_ans_segment["start"] = show_ans_segment["start"] - start_segment["start"]
 
         # Create a composite audio clip
         final_audio = CompositeAudioClip([trimmed_audio])
@@ -297,7 +298,7 @@ def create_video_from_audio(audio_path):
                 background_path,
                 "temp_text_image.png",
                 static_text=top_static_text,
-                bottom_static_text="" if show_ans_time is None else bottom_static_text
+                bottom_static_text="" if show_ans_time["start"] < segment["start"] else bottom_static_text
             )
             if i < len(segments) - 1:
                 duration = round(segments[i + 1]["end"] - segment["start"], 2)

@@ -192,7 +192,7 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
     sentence = sentence.strip().lower()  # Normalize the sentence for better matching
     sendNextWordStartTime = False
     for i, segment in enumerate(segments):
-        if checkAfterSegment is None or checkAfterSegment["id"] >= segment["id"] :
+        if checkAfterSegment is None or segment["id"] >= checkAfterSegment["id"]:
             segment_text = segment['text'].strip().lower()
             if sendNextWordStartTime:
                 return segment

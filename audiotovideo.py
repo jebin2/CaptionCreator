@@ -298,7 +298,7 @@ def create_video_from_audio(audio_path):
                 background_path,
                 "temp_text_image.png",
                 static_text=top_static_text,
-                bottom_static_text="" if show_ans_segment["start"] < segment["start"] else bottom_static_text
+                bottom_static_text="" if show_ans_segment["start"] > segment["start"] else bottom_static_text
             )
             if i < len(segments) - 1:
                 duration = round(segments[i + 1]["end"] - segment["start"], 2)

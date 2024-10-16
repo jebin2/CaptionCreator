@@ -17,7 +17,7 @@ def get_ollama_output(transcript, riddle):
 
                 2. Riddle Answer: The exact text where the solution is first mentioned or explained. Look for any clear solution indication.
 
-                3. Riddle End: The exact text of the last sentence explaining the answer, before any general discussion or reflection. Focus on the conclusion of the explanation( minimal to medium explanation), not necessarily the end of all riddle-related talk.
+                3. Riddle End: The exact text of the last sentence explaining the answer, before any general discussion or reflection. Focus on the conclusion of the explanation, not necessarily the end of all riddle-related talk.
 
                 Provide the response as a JSON object with the extracted text:
 

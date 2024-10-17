@@ -136,7 +136,7 @@ def validate_riddle_positions(transcript, positions):
     return valid_positions and correct_order
 
 def process_convo_text(transcript, riddle, answer):
-    max_retries = 10
+    max_retries = 100
     attempts = 0
 
     while attempts < max_retries:

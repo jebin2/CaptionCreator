@@ -8,7 +8,14 @@ import sqlite3
 import logging
 import riddle_parser
 
-BACKGROUND_IMAGES_N = 6  # Total number of background images available
+BACKGROUND_IMAGES_N = 11  # Total number of background images available
+BACKGROUND_LABEL = 'background'
+BACKGROUND_PATH = 'background_images'
+BACKGROUND_EXT = 'jpg'
+FONT_N = 3
+FONT_LABEL = 'font'
+FONT_PATH = 'Fonts'
+FONT_EXT = 'ttf'
 SHOW_ANSWER = False
 
 # Configure logging
@@ -32,14 +39,14 @@ def transcribe_audio(audio_path):
         logging.error(f"Failed to transcribe audio {audio_path}: {str(e)}", exc_info=True)
         return "", []
 
-def get_random_background_image(n):
+def get_random_file_name(path, label, n, ext):
     """Select a random background image from the available ones."""
     try:
         random_number = random.randint(1, n)
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        background_path = os.path.join(script_dir, "background_images", f"background-{random_number}.jpg")
-        logging.info(f"Selected random background image: {background_path}")
-        return background_path
+        path_with_file_name = os.path.join(script_dir, path, f"{label}_{random_number}.{ext}")
+        logging.info(f"Selected random path_with_file_name: {path_with_file_name}")
+        return path_with_file_name
     except Exception as e:
         logging.error(f"Error selecting background image: {str(e)}", exc_info=True)
         return ""
@@ -50,7 +57,7 @@ def create_text_image(text, background_path, temp_filename, font_size=70, img_si
     try:
         background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
-        font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
         font = ImageFont.truetype(font_path, font_size)
 
         # Function to wrap text into lines based on the width
@@ -173,6 +180,7 @@ def resize_thumbnail(thumbnail_path):
                 img.save(thumbnail_path, format='PNG', quality=quality)
                 file_size = os.path.getsize(thumbnail_path)
                 quality -= 5
+                wait_with_logs(10)
             logging.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
         else:
             logging.info(f"Thumbnail {thumbnail_path} is within size limits")
@@ -190,13 +198,20 @@ def show_answer(end, total_duration, sentence, bottom_static_text):
 
 def find_segment_time(sentence, segments, type, checkAfterSegment):
     sentence = sentence.strip().lower()  # Normalize the sentence for better matching
+    sentence = sentence.replace(".", "")
     sendNextWordStartTime = False
+    combineSegementText = None
     for i, segment in enumerate(segments):
         if checkAfterSegment is None or segment["id"] >= checkAfterSegment["id"]:
             segment_text = segment['text'].strip().lower()
+            segment_text = segment_text.replace(".", "")
+            if combineSegementText is None:
+                combineSegementText = segment_text
+            else:
+                combineSegementText += f" {segment_text}"
             if sendNextWordStartTime:
                 return segment
-            if sentence in segment_text:
+            if sentence in combineSegementText:
                 if type == "start":
                     return segment
                 else:
@@ -239,7 +254,7 @@ def create_video_from_audio(audio_path):
     logging.info(f"Retrieved metadata: thumbnailText='{thumbnailText}', top_static_text='{top_static_text}', bottom_static_text='{bottom_static_text}'")
     
     # Load background image
-    background_path = get_random_background_image(BACKGROUND_IMAGES_N)
+    background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT)
     audio = AudioFileClip(audio_path)
     
     # Split transcript into sentences and calculate total words
@@ -255,27 +270,14 @@ def create_video_from_audio(audio_path):
         
         if "--#end#--" in sentence:
             sentence = sentence.replace("--#end#--", "")
-            end_segment = find_segment_time(sentence, segments, "end", start_segment)
-            tempVal = None
-            if len(sentence.split(", ")) > 1:
-                for sen in sentence.split(", "):
-                    tempVal = find_segment_time(sen, segments, "end", start_segment)
-                    end_segment = tempVal if None else end_segment
-            if len(sentence.split("? ")) > 1:
-                for sen in sentence.split("? "):
-                    tempVal = find_segment_time(sen, segments, "end", start_segment)
-                    end_segment = tempVal if None else end_segment
-            if len(sentence.split("! ")) > 1:
-                for sen in sentence.split("! "):
-                    tempVal = find_segment_time(sen, segments, "end", start_segment)
-                    end_segment = tempVal if None else end_segment
+            end_segment = find_segment_time(sentence, segments, "end", show_ans_segment)
 
         if "--#answer#--" in sentence:
             sentence = sentence.replace("--#answer#--", "")
             show_ans_segment = find_segment_time(sentence, segments, "start", start_segment)
 
     if start_segment is None or end_segment is None:
-        logging.error("Could not determine valid start and end times for trimming. Check transcript markers.")
+        logging.error(f"Could not determine valid start and end times for trimming. Check transcript markers. {start_segment} and {end_segment}")
         trimmed_audio = audio  # Keep the original audio if times are invalid
     else:
         trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
@@ -298,7 +300,7 @@ def create_video_from_audio(audio_path):
                 background_path,
                 "temp_text_image.png",
                 static_text=top_static_text,
-                bottom_static_text="" if show_ans_segment["start"] > segment["start"] else bottom_static_text
+                bottom_static_text="" if show_ans_segment is None or segment is None or show_ans_segment["start"] > segment["start"] else bottom_static_text
             )
             if i < len(segments) - 1:
                 duration = round(segments[i + 1]["end"] - segment["start"], 2)

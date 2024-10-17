@@ -272,12 +272,12 @@
                     <td>${entry.description}</td>
                     <td>${entry.thumbnailText}</td>
                     <td>${entry.answer}</td>
-                    <td>${entry.generatedVideoPath || 'N/A'}</td>
-                    <td>${entry.generatedThumbnailPath || 'N/A'}</td>
+                    <td>${entry.generatedVideoPath || ''}</td>
+                    <td>${entry.generatedThumbnailPath || ''}</td>
                     <td>${entry.uploadedToYoutube ? '✔️' : '❌'}</td>
                     <td>${entry.uploadedToX ? '✔️' : '❌'}</td>
-                    <td>${entry.youtubeVideoId || 'N/A'}</td>
-                    <td>${entry.tweetId || 'N/A'}</td>`;
+                    <td>${entry.youtubeVideoId || ''}</td>
+                    <td>${entry.tweetId || ''}</td>`;
                 entriesBody.appendChild(row);
             });
         }

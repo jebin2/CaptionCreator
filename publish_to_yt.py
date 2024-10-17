@@ -126,7 +126,7 @@ def process_entries_in_db():
         FROM entries 
         WHERE generatedVideoPath IS NOT NULL 
         AND generatedThumbnailPath IS NOT NULL
-        AND uploadedToYoutube = 0
+        AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
     """)
     entries = cursor.fetchall()
 

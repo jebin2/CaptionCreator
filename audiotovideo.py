@@ -240,6 +240,9 @@ def create_video_from_audio(audio_path):
 
     # Process transcript with riddle_parser (which should add --#start#--, --#answer#--, --#end#--)
     transcript = riddle_parser.process_convo_text(transcript, top_static_text, bottom_static_text)
+    if transcript is None:
+        logging.error("No transcript generated. Cannot create video.")
+        return
     
     highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
                                         .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
@@ -337,6 +340,7 @@ def create_video_from_audio(audio_path):
             thumbnailText, 
             background_path,
             thumbnail_path,
+            font_path,
             static_text="",
             bottom_static_text=""
         )

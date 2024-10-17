@@ -68,30 +68,50 @@ def get_ollama_output(transcript, riddle, answer):
         print(f"Error in get_ollama_output: {e}")
         return None
 
+import re
+
+import re
+
 def calculate_positions(transcript, riddle_data):
+    # Normalize the transcript and clean it
+    lower_transcript = transcript.lower()
+    clean_transcript = re.sub(r'[^a-zA-Z0-9\s]', '', lower_transcript)  # Remove non-alphanumeric except spaces
+    clean_transcript = re.sub(r'\s+', ' ', clean_transcript).strip()  # Normalize spaces
+    print(f"clean_transcript: {clean_transcript}")
+    
     positions = {}
     for key, text in riddle_data.items():
         if text:
-            lower_transcript = transcript.lower()
             lower_text = text.lower()
-            match = re.search(re.escape(lower_text).replace(r'\ ', r'\s+'), lower_transcript)
+            clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', lower_text)  # Clean text similarly
+            clean_text = re.sub(r'\s+', ' ', clean_text).strip()  # Normalize spaces
+            print(f"clean_text: {clean_text}")
+
+            # Check for exact match first
+            match = re.search(re.escape(clean_text), clean_transcript)  # Use escaped cleaned text
             if match:
                 positions[key] = match.start()
             else:
-                words = lower_text.split()
+                # Split the cleaned text into words for partial matching
+                words = clean_text.split()  # Use cleaned text for splitting
                 for i in range(len(words), 0, -1):
-                    partial_text = r'\s+'.join(re.escape(word) for word in words[:i])
-                    match = re.search(partial_text, lower_transcript)
+                    partial_text = r'\s+'.join(re.escape(word) for word in words[:i])  # Create partial regex
+                    match = re.search(partial_text, clean_transcript)  # Use cleaned transcript for matching
                     if match:
                         positions[key] = match.start()
                         break
                 else:
-                    positions[key] = -1
+                    positions[key] = -1  # No match found
+
         else:
-            positions[key] = -1
+            positions[key] = -1  # If text is empty, assign -1
+
+        # Special handling for the "end" key
         if key == "end" and text.rfind(". ") != -1:
-            positions[key] = positions[key] + text.rfind(". ") + 2
+            positions[key] = positions.get(key, -1) + text.rfind(". ") + 2
+
     return positions
+
 
 def insert_text(original_string, text_to_insert, index):
     if index == -1:
@@ -150,13 +170,12 @@ def process_convo_text(transcript, riddle, answer):
                     print(f"Attempt {attempts + 1}: Invalid positions, retrying...")
             else:
                 print("Failed to process the transcript accurately.")
-                return transcript
             
             attempts += 1
 
         except Exception as e:
             print(f"An error occurred in process_convo_text: {e}")
-            return transcript
+            return None
 
     print("Max retries reached. Returning original transcript.")
-    return transcript
+    return None

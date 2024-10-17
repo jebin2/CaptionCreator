@@ -378,7 +378,7 @@ def check_for_new_entries():
     while True:
         cursor.execute("SELECT audioPath FROM entries WHERE generatedVideoPath IS NULL OR generatedVideoPath = ''")
         new_entries = cursor.fetchall()
-        
+        print(f"new_entries : {new_entries}")
         for (audio_path,) in new_entries:
             if os.path.exists(audio_path):
                 logging.info(f"Processing new entry: {audio_path}")

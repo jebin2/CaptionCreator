@@ -2,115 +2,168 @@ import ollama
 import json
 import re
 
+def get_prompt(riddle, answer, transcript, verify):
+    return f"""
+        Analyze the following transcription and extract the exact text for these elements:
+
+        Riddle: {riddle}
+        Answer: {answer}
+        Transcription: {transcript}
+
+        CRITICAL: You must ONLY respond with a JSON object. Do not include ANY other text, explanation, or formatting.
+        The response must be in this exact format:
+
+        {{
+            "start": "extracted text for riddle start",
+            "answer": "extracted text for riddle answer",
+            "end": "extracted text for riddle end"
+        }}
+
+        Extraction rules:
+        1. Riddle Start: The exact text where the actual riddle question or statement begins. Consider the broader context to avoid false positives. Look for first clear indication of a actual riddle about to present/start.
+        
+        2. Riddle Answer: The exact text where the solution is first mentioned or explained. Look for any clear solution indication.
+        
+        3. Riddle End: IMPORTANT - Search for this ONLY in the text that appears AFTER the Riddle Answer text you identified above. Find the last sentence explaining the answer, before any general discussion or not necessarily a big discussion.
+
+        Extraction Process:
+        1. First identify and extract the start text
+        2. Then find and extract the answer text
+        3. Finally, look ONLY in the remaining text AFTER the answer text to find the end text
+        
+        Note: 
+        - Be precise in identifying these text excerpts
+        - Extract only the specific riddle question or statement, not general discussion
+        - Use an empty string for any element you can't find clear text for
+        - Maintain chronological order: start text must come before answer text, which must come before end text
+        - The end text MUST be found after the answer text in the transcript
+        - If you can't find an end text that appears after the answer text, return an empty string for end
+
+        {verify}
+    """
+
 def get_ollama_output(transcript, riddle, answer):
     try:
-        max_retries = 10
-        attempts = 0
-
-        while attempts < max_retries:
-            attempts += 1
-            response = ollama.chat(model='llama3.2', messages=[
-                {
-                    'role': 'user',
-                    'content': f"""
-                    Analyze the following transcription and extract the exact text for these elements:
-
-                    Riddle: {riddle}
-                    Answer: {answer}
-                    Transcription: {transcript}
-
-                    CRITICAL: You must ONLY respond with a JSON object. Do not include ANY other text, explanation, or formatting.
-                    The response must be in this exact format:
-
-                    {{
-                        "start": "extracted text for riddle start",
-                        "answer": "extracted text for riddle answer",
-                        "end": "extracted text for riddle end"
-                    }}
-
-                    Extraction rules:
-                    1. Riddle Start: The exact text where the actual riddle question or statement begins. Consider the broader context to avoid false positives. Look for first clear indication of a actual riddle about to present/start.
-                    
-                    2. Riddle Answer: The exact text where the solution is first mentioned or explained. Look for any clear solution indication.
-                    
-                    3. Riddle End: IMPORTANT - Search for this ONLY in the text that appears AFTER the Riddle Answer text you identified above. Find the last sentence explaining the answer, before any general discussion.
-
-                    Extraction Process:
-                    1. First identify and extract the start text
-                    2. Then find and extract the answer text
-                    3. Finally, look ONLY in the remaining text AFTER the answer text to find the end text
-                    
-                    Note: 
-                    - Be precise in identifying these text excerpts
-                    - Extract only the specific riddle question or statement, not general discussion
-                    - Use an empty string for any element you can't find clear text for
-                    - Maintain chronological order: start text must come before answer text, which must come before end text
-                    - The end text MUST be found after the answer text in the transcript
-                    - If you can't find an end text that appears after the answer text, return an empty string for end
-                    """
-                }
-            ])
-            
-            content = response['message']['content']
-            print(f"Check content :: {content}")
-            json_match = re.search(r'\{[^{}]*\}', content)
-            if json_match:
-                riddle_data = json.loads(json_match.group())
-                if riddle_data["start"] == '' or riddle_data["end"] == '' or riddle_data["answer"] == '':
-                    print(f"Retrying due to empty object counter :: {attempts} data :: {riddle_data}")
-                else:
-                    print(riddle_data)
-                    return riddle_data
+        response = ollama.chat(model='llama3.2', messages=[
+            {
+                'role': 'user',
+                'content': get_prompt(riddle, answer, transcript, '')
+            }
+        ])
+        
+        content = response['message']['content']
+        json_match = re.search(r'\{[^{}]*\}', content)
+        if json_match:
+            riddle_data = json.loads(json_match.group())
+            if riddle_data["start"] == '' or riddle_data["end"] == '' or riddle_data["answer"] == '':
+                return None
             else:
-                raise ValueError("No valid JSON found in the response")
+                print(riddle_data)
+                riddle_data = verify_output(transcript, riddle, answer, riddle_data)
+                print(riddle_data)
+                return riddle_data
+        else:
+            raise ValueError("No valid JSON found in the response")
     
     except Exception as e:
         print(f"Error in get_ollama_output: {e}")
         return None
 
-import re
+def verify_output(transcript, riddle, answer, riddle_data):
+    try:
+        response = ollama.chat(model='llama3.2', messages=[
+            {
+                'role': 'user',
+                'content': get_prompt(riddle, answer, transcript, """
+                    Below is the answer given by you previously for ther above prompt.
 
-import re
-
-def calculate_positions(transcript, riddle_data):
-    # Normalize the transcript and clean it
-    lower_transcript = transcript.lower()
-    clean_transcript = re.sub(r'[^a-zA-Z0-9\s]', '', lower_transcript)  # Remove non-alphanumeric except spaces
-    clean_transcript = re.sub(r'\s+', ' ', clean_transcript).strip()  # Normalize spaces
-    print(f"clean_transcript: {clean_transcript}")
-    
-    positions = {}
-    for key, text in riddle_data.items():
-        if text:
-            lower_text = text.lower()
-            clean_text = re.sub(r'[^a-zA-Z0-9\s]', '', lower_text)  # Clean text similarly
-            clean_text = re.sub(r'\s+', ' ', clean_text).strip()  # Normalize spaces
-            print(f"clean_text: {clean_text}")
-
-            # Check for exact match first
-            match = re.search(re.escape(clean_text), clean_transcript)  # Use escaped cleaned text
-            if match:
-                positions[key] = match.start()
+                    ansmwer: {riddle_data}
+                    
+                    Please review the following answer for accuracy and clarity:
+                    Is this answer correct? return the same
+                    If the answer needs improvement, please make the necessary changes and provide the revised answer follow the answer format always.
+                """)
+            }
+        ])
+        
+        content = response['message']['content']
+        json_match = re.search(r'\{[^{}]*\}', content)
+        if json_match:
+            new_riddle_data = json.loads(json_match.group())
+            if new_riddle_data["start"] == '' or new_riddle_data["end"] == '' or new_riddle_data["answer"] == '':
+                return riddle_data
             else:
-                # Split the cleaned text into words for partial matching
-                words = clean_text.split()  # Use cleaned text for splitting
-                for i in range(len(words), 0, -1):
-                    partial_text = r'\s+'.join(re.escape(word) for word in words[:i])  # Create partial regex
-                    match = re.search(partial_text, clean_transcript)  # Use cleaned transcript for matching
-                    if match:
-                        positions[key] = match.start()
-                        break
-                else:
-                    positions[key] = -1  # No match found
+                return new_riddle_data
+    
+    except Exception as e:
+        print(f"Error in get_ollama_output: {e}")
+        return riddle_data
+    
 
-        else:
-            positions[key] = -1  # If text is empty, assign -1
+def calculate_positions(transcript, test_search, _type):
+    def get_clean_to_original_mapping(text):
+        cleaned_text = ''
+        position_map = {}
+        cleaned_pos = 0
+        
+        for orig_pos, char in enumerate(text):
+            if char.isalnum() or char.isspace():
+                cleaned_text += char
+                position_map[cleaned_pos] = orig_pos
+                cleaned_pos += 1
+                
+        return cleaned_text, position_map
 
-        # Special handling for the "end" key
-        if key == "end" and text.rfind(". ") != -1:
-            positions[key] = positions.get(key, -1) + text.rfind(". ") + 2
+    def incremental_search(search_text, target_text):
+        if not search_text:
+            return -1
+            
+        words = search_text.split()
+        current_position = -1
+        
+        # First try exact match
+        for i in range(len(words)):
+            partial_text = ' '.join(words[:i+1])
+            print(f"{partial_text}")
+            match = target_text.find(partial_text)
+            
+            # Try case-insensitive match
+            if match == -1:
+                match = target_text.lower().find(partial_text.lower())
+            
+            # If still no match, try with cleaned text while maintaining original position
+            if match == -1:
+                cleaned_target, position_map = get_clean_to_original_mapping(target_text)
+                cleaned_search = ''.join(c for c in partial_text.lower() if c.isalnum() or c.isspace())
+                match = cleaned_target.lower().find(cleaned_search)
+                
+                # Map cleaned position back to original position
+                if match != -1 and match in position_map:
+                    match = position_map[match]
+            
+            if match != -1:
+                current_position = match
+            else:
+                break
+                
+        return current_position
 
-    return positions
+    positions = {}
+    
+    # Handle empty text case
+    if not test_search:  
+        positions["index"] = -1
+    else:
+        position = incremental_search(test_search, transcript)
+        positions["index"] = position
+        
+        # Special handling for the "end" type
+        if _type == "end" and position != -1:
+            last_period_pos = test_search.find('. ')
+            if last_period_pos != -1:
+                positions["index"] = position + last_period_pos + 2
+
+    return positions["index"]
 
 
 def insert_text(original_string, text_to_insert, index):
@@ -163,7 +216,10 @@ def process_convo_text(transcript, riddle, answer):
         try:
             riddle_data = get_ollama_output(transcript, riddle, answer)
             if riddle_data:
-                positions = calculate_positions(transcript, riddle_data)
+                positions = {}
+                for key, text in riddle_data.items():
+                    positions[key] = calculate_positions(transcript, text, key)
+                    print(f"{positions}")
                 if validate_riddle_positions(transcript, positions):
                     return add_markers_to_transcript(transcript, positions)
                 else:

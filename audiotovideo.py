@@ -51,13 +51,12 @@ def get_random_file_name(path, label, n, ext):
         logging.error(f"Error selecting background image: {str(e)}", exc_info=True)
         return ""
 
-def create_text_image(text, background_path, temp_filename, font_size=70, img_size=(1920, 1080), padding=50, extra_space=100, stroke_width=2, static_text="", bottom_static_text=""):
+def create_text_image(text, background_path, temp_filename, font_path, font_size=70, img_size=(1920, 1080), padding=50, extra_space=100, stroke_width=2, static_text="", bottom_static_text=""):
     """Create an image with bold text, a black border around each letter, and static text at the top and bottom."""
     logging.info(f"Creating text image with background: {background_path}")
     try:
         background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
-        font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
         font = ImageFont.truetype(font_path, font_size)
 
         # Function to wrap text into lines based on the width
@@ -292,6 +291,7 @@ def create_video_from_audio(audio_path):
         transcript, segments = transcribe_audio("output_file.mp3")
 
     txt_clips = []
+    font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
     for i, segment in enumerate(segments):
         try:
             # If near the answer, show the bottom static text
@@ -299,6 +299,7 @@ def create_video_from_audio(audio_path):
                 segment["text"], 
                 background_path,
                 "temp_text_image.png",
+                font_path,
                 static_text=top_static_text,
                 bottom_static_text="" if show_ans_segment is None or segment is None or show_ans_segment["start"] > segment["start"] else bottom_static_text
             )

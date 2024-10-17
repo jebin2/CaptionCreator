@@ -124,8 +124,8 @@ def process_entries_in_db():
     cursor.execute(""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath 
         FROM entries 
-        WHERE generatedVideoPath IS NOT NULL 
-        AND generatedThumbnailPath IS NOT NULL
+        WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
+        AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
         AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
     """)
     entries = cursor.fetchall()

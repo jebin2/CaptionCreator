@@ -11,3 +11,5 @@ xcredentials.json
 riddleformat.txt
 output_file.mp3
 temp_text_image.png
+screenshot.png
+.screenshot*

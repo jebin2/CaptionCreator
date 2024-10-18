@@ -7,6 +7,7 @@ import random
 import sqlite3
 import logging
 import riddle_parser
+import create_riddles
 
 BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
@@ -387,6 +388,7 @@ def check_for_new_entries():
                 logging.warning(f"Audio file not found: {audio_path}")
 
         wait_with_logs(10)  # Sleep for a while before checking again
+        create_riddles.start()
 
 def wait_with_logs(seconds):
     """Wait for a specified number of seconds, logging the countdown."""

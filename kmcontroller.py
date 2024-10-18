@@ -168,11 +168,12 @@ def createAudioAndDownload(riddle_data):
 Let's unlock this mystery...
 [Break down the clues by analyzing and thinking out loud]
 [gather insights]
-[Arrive at the answer and state it clearly] The answer is: {riddle_data['answer']}
-It fits because [Quick one sentence explanation]
-"There you go, Thank you for listening"
+[Arrive at the answer] The answer is: {riddle_data['answer']}
+There you go, [Quick one sentence explanation]
+"Thank you for listening"
 Rules:
 Never acknowledge listener
+Direct solving only
 Strictly follow sequence exactly
 1-2 minutes min-max time limit
 No extra commentary""", interval=0.1)

@@ -40,7 +40,7 @@ FORMAT: Return ONLY this exact JSON structure:
     "riddle": "Your riddle text here",
     "answer": "single word answer",
     "difficulty": "medium",
-    "category": "pick one: objects/nature/technology/concepts/funny/clever",
+    "category": "pick one: objects/nature/concepts/funny/clever",
     "hint": "optional subtle hint"
 }}
 

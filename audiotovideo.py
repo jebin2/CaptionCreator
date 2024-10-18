@@ -27,7 +27,7 @@ def transcribe_audio(audio_path):
         logging.info(f"Starting audio transcription for: {audio_path}")
 
         # Load the Whisper model without weights_only parameter
-        model = whisper.load_model("medium")
+        model = whisper.load_model("base")
         logging.info("Whisper model loaded successfully")
 
         result = model.transcribe(audio_path, word_timestamps=True)

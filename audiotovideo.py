@@ -12,7 +12,7 @@ BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
 BACKGROUND_PATH = 'background_images'
 BACKGROUND_EXT = 'jpg'
-FONT_N = 3
+FONT_N = 2
 FONT_LABEL = 'font'
 FONT_PATH = 'Fonts'
 FONT_EXT = 'ttf'
@@ -278,20 +278,20 @@ def create_video_from_audio(audio_path):
             sentence = sentence.replace("--#answer#--", "")
             show_ans_segment = find_segment_time(sentence, segments, "start", start_segment)
 
-    if start_segment is None or end_segment is None:
-        logging.error(f"Could not determine valid start and end times for trimming. Check transcript markers. {start_segment} and {end_segment}")
+    # if start_segment is None or end_segment is None:
+    #     logging.error(f"Could not determine valid start and end times for trimming. Check transcript markers. {start_segment} and {end_segment}")
         trimmed_audio = audio  # Keep the original audio if times are invalid
-    else:
-        trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
-        show_ans_segment["start"] = show_ans_segment["start"] - start_segment["start"]
+    # else:
+    #     trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
+    #     show_ans_segment["start"] = show_ans_segment["start"] - start_segment["start"]
 
-        # Create a composite audio clip
-        final_audio = CompositeAudioClip([trimmed_audio])
-        final_audio.fps = audio.fps
-        # Write the result to a file
-        final_audio.write_audiofile("output_file.mp3")
+    #     # Create a composite audio clip
+    #     final_audio = CompositeAudioClip([trimmed_audio])
+    #     final_audio.fps = audio.fps
+    #     # Write the result to a file
+    #     final_audio.write_audiofile("output_file.mp3")
 
-        transcript, segments = transcribe_audio("output_file.mp3")
+    #     transcript, segments = transcribe_audio("output_file.mp3")
 
     txt_clips = []
     font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)

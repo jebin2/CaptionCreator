@@ -25,8 +25,11 @@ def transcribe_audio(audio_path):
     """Transcribe the given audio file using Whisper."""
     try:
         logging.info(f"Starting audio transcription for: {audio_path}")
-        model = whisper.load_model("base")
+
+        # Load the Whisper model without weights_only parameter
+        model = whisper.load_model("medium")
         logging.info("Whisper model loaded successfully")
+
         result = model.transcribe(audio_path, word_timestamps=True)
         logging.info(f"Transcription completed successfully for: {audio_path}")
         
@@ -34,6 +37,7 @@ def transcribe_audio(audio_path):
     except Exception as e:
         logging.error(f"Failed to transcribe audio {audio_path}: {str(e)}", exc_info=True)
         return "", []
+
 
 def get_random_file_name(path, label, n, ext):
     """Select a random background image from the available ones."""

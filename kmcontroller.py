@@ -163,21 +163,18 @@ def createAudioAndDownload(riddle_data):
 
         # Paste text again if needed
         log_message("Pasting text into the customise field...")
-        pyautogui.write(f"""start with "Hello everyone, Here it goes"
-[State riddle - Host 1 and Host 2 alternate reading each sentence]
+        pyautogui.write(f"""Start with "Hello everyone, Today's mystery"
+[State riddle - Host1 and Host2 alternate reading each sentence]
 Let's unlock this mystery...
-[Analyse and think]
-First clue points to: [insight]
-Second clue reveals: [insight]
-Pattern shows: [insight]
-The answer is: {riddle_data['answer']}
+[Break down the clues by analyzing and thinking out loud]
+[gather insights]
+[Arrive at the answer and state it clearly] The answer is: {riddle_data['answer']}
 It fits because [Quick one sentence explanation]
-"Riddle Solved. Thank you for listening"
+"There you go, Thank you for listening"
 Rules:
 Never acknowledge listener
-Direct solving only
-Follow sequence exactly
-1-2 min-max time limit
+Strictly follow sequence exactly
+1-2 minutes min-max time limit
 No extra commentary""", interval=0.1)
         time.sleep(2)
 

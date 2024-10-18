@@ -60,18 +60,18 @@ def get_ollama_output(transcript, riddle, answer):
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.debug(f"Ollama response content: {content}")
+        logging.info(f"Ollama response content: {content}")
 
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
             riddle_data = json.loads(json_match.group())
-            if riddle_data["start"] == '' or riddle_data["end"] == '' or riddle_data["answer"] == '':
-                return None
-            else:
-                print(riddle_data)
-                riddle_data = verify_output(transcript, riddle, answer, riddle_data)
-                print(riddle_data)
-                return riddle_data
+            # if riddle_data["start"] == '' or riddle_data["end"] == '' or riddle_data["answer"] == '':
+                # return None
+            # else:
+            print(riddle_data)
+            # riddle_data = verify_output(transcript, riddle, answer, riddle_data)
+            # print(riddle_data)
+            return riddle_data
         else:
             raise ValueError("No valid JSON found in the response")
     
@@ -101,7 +101,7 @@ def verify_output(transcript, riddle, answer, riddle_data):
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.debug(f"Ollama response content: {content}")
+        logging.info(f"Ollama response content: {content}")
 
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
@@ -203,8 +203,9 @@ def add_markers_to_transcript(transcript, positions):
     )
 
     for key, marker in sorted_markers:
-        position = positions[key]
-        marked_transcript = insert_text(marked_transcript, marker, position)
+        if key == "answer":
+            position = positions[key]
+            marked_transcript = insert_text(marked_transcript, marker, position)
 
     return marked_transcript
 
@@ -234,12 +235,13 @@ def process_convo_text(transcript, riddle, answer):
             if riddle_data:
                 positions = {}
                 for key, text in riddle_data.items():
-                    positions[key] = calculate_positions(transcript, text, key)
+                    if key == 'answer':
+                        positions[key] = calculate_positions(transcript, text, key)
                     print(f"{positions}")
-                if validate_riddle_positions(transcript, positions):
-                    return add_markers_to_transcript(transcript, positions)
-                else:
-                    print(f"Attempt {attempts + 1}: Invalid positions, retrying...")
+                # if validate_riddle_positions(transcript, positions):
+                return add_markers_to_transcript(transcript, positions)
+                # else:
+                    # print(f"Attempt {attempts + 1}: Invalid positions, retrying...")
             else:
                 print("Failed to process the transcript accurately.")
             

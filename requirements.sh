@@ -15,4 +15,7 @@ sudo apt install -y \
     libfreetype6-dev \
     libharfbuzz-dev \
     sqlite3 \
-    python3-opencv
+    python3-opencv \
+    python3-dev \
+    scrot \
+    python3-tk

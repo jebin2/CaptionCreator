@@ -35,14 +35,14 @@ def get_prompt():
             You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
 The answer should NOT be any of these: {oldAnswers}
 FORMAT: Return ONLY this exact JSON structure:
-{
+{{
     "title": "Engaging YouTube Title",
     "riddle": "Your riddle text here",
     "answer": "single word answer",
     "difficulty": "medium",
     "category": "pick one: objects/nature/technology/concepts/funny/clever",
     "hint": "optional subtle hint"
-}
+}}
 
 RIDDLE GUIDELINES:
 1. Make it ORIGINAL - never use common or classic riddles
@@ -57,7 +57,7 @@ TITLE REQUIREMENTS:
 - Include words like "Genius," "Tricky," or "Can You Solve"
 - 3-5 words maximum
         """
-        logging.debug(f"Prompt created successfully:: {prompt}")
+        logging.info(f"Prompt created successfully:: {prompt}")
         return prompt
     
     except Exception as e:
@@ -80,7 +80,7 @@ def get_ollama_output():
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.debug(f"Ollama response content: {content}")
+        logging.info(f"Ollama response content: {content}")
 
         # Extract JSON data using regex
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)

@@ -1,91 +1,21 @@
-Here's a comprehensive guide to set up your Debian virtual machine (VM) to use pyautogui and ensure it runs smoothly with X11:
+xhost +
+xhost +local:$(whoami)
+xhost +local:
 
-Full Setup Guide for Using pyautogui on Debian in VirtualBox
-Step 1: Install Debian in VirtualBox
-Create a New VM:
-
-Open VirtualBox and create a new VM with Debian as the OS type.
-Install Debian:
-
-Follow the installation prompts to install Debian.
-Step 2: Install Necessary Packages
-Log In to your Debian system.
-
-Open Terminal and run:
-
-bash
-Copy code
-sudo apt-get update
-sudo apt-get install xorg python3-pip
-Install pyautogui:
-
-bash
-Copy code
-pip install pyautogui
-Step 3: Ensure Graphical Environment is Installed
-Install a Desktop Environment (if not already installed): You can choose either GNOME or a lightweight option like XFCE:
-
-bash
-Copy code
-sudo apt-get install gnome
-or
-
-bash
-Copy code
-sudo apt-get install xfce4
-Install a Display Manager (if necessary):
-
-bash
-Copy code
-sudo apt-get install gdm3
-Step 4: Configure VirtualBox Settings
-Enable 3D Acceleration (optional but recommended):
-
-Shut down your VM, go to Settings > Display > check Enable 3D Acceleration.
-Adjust Video Memory:
-
-Increase the video memory to at least 128 MB for better performance.
-Step 5: Select the X11 Session at Login
-Log Out of your current session.
-
-On the login screen, click the gear icon (session selection option).
-
-Select "GNOME Classic on Xorg" or "Gnome on Xorg".
-
-Log In.
-
-Step 6: Verify the Setup
-Open Terminal and check the display variable:
-
-bash
-Copy code
-echo $DISPLAY
-It should return something like :0.
-
-Check Running Processes:
-
-bash
-Copy code
 ps aux | grep X
 Ensure your X server is active.
 
+sudo nano /etc/gdm3/custom.conf
+
+[daemon]
+DefaultSession=gnome-xorg.desktop
+
+vboxuser@debian:~$ echo $XDG_SESSION_TYPE
+x11
+vboxuser@debian:~$ 
+
+sudo apt install gnome-session xorg
+
+
 Step 7: Run Your pyautogui Scripts
 Create or Open Your Python Script (e.g., kmcontroller.py):
-
-bash
-Copy code
-nano ~/temp/kmcontroller.py
-Run Your Script:
-
-bash
-Copy code
-python3 ~/temp/kmcontroller.py
-Troubleshooting Tips
-If you encounter issues starting X11, ensure your display manager is properly configured (e.g., GDM or LightDM).
-If you can't find the gear icon, check your display manager settings or try reinstalling the display manager.
-Always check the X server log for errors:
-bash
-Copy code
-cat /var/log/Xorg.0.log
-Summary
-This guide should help you set up your Debian VM for using pyautogui effectively. Each time you need to use it, just make sure to select an X11 session at the login screen. If you have further questions in the future or run into any issues, feel free to reach out!

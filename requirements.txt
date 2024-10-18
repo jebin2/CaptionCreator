@@ -10,3 +10,4 @@ opencv-python
 numpy
 requests-oauthlib
 whisper
+colorama

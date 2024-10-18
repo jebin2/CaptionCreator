@@ -1,0 +1,6 @@
+Install
+    npm
+    node
+    bun
+    ollama
+    pip install git+https://github.com/openai/whisper.git

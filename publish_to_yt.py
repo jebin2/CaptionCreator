@@ -1,6 +1,5 @@
 import os
 import time
-import logging
 import json
 import sqlite3
 from google.oauth2.credentials import Credentials
@@ -8,13 +7,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
+from logger_config import setup_logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+logging = setup_logging()
 
 # Define constants
 DATABASE_PATH = 'ContentData/entries.db'

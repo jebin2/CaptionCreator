@@ -1,16 +1,11 @@
 import os
 import time
-import logging
 import json
 import sqlite3
 from requests_oauthlib import OAuth1Session
+from logger_config import setup_logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
+logging = setup_logging()
 
 # Define constants
 DATABASE_PATH = 'ContentData/entries.db'

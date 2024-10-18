@@ -1,13 +1,12 @@
-import ollama
 import json
 import re
 import sqlite3
-import logging
 import kmcontroller
+from logger_config import setup_logging
+import requests
+import ollamaresponseparser
 
-# Setup logging configuration
-logging.basicConfig(filename='riddle_generation.log', level=logging.DEBUG, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging = setup_logging()
 
 def get_prompt():
     try:
@@ -23,16 +22,42 @@ def get_prompt():
         conn.close()
 
         prompt = f"""
-            Create a unique, original riddle that has not been used before. The answer should NOT be any of these: {oldAnswers}
+            Create a unique, original Enigmas riddle that has not been used before. The answer should NOT be any of these: {oldAnswers}
 
-            Please format your response as:
+            Its mandatory to format your response as JSON Object:
             {{
                 "title": <SEO optimised title for the riddle to upload in youtube>
                 "riddle": <your new riddle>,
                 "answer": <the solution>
             }}
         """
-        logging.debug("Prompt created successfully.")
+        prompt = f"""
+            You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
+The answer should NOT be any of these: {oldAnswers}
+FORMAT: Return ONLY this exact JSON structure:
+{
+    "title": "Engaging YouTube Title",
+    "riddle": "Your riddle text here",
+    "answer": "single word answer",
+    "difficulty": "medium",
+    "category": "pick one: objects/nature/technology/concepts/funny/clever",
+    "hint": "optional subtle hint"
+}
+
+RIDDLE GUIDELINES:
+1. Make it ORIGINAL - never use common or classic riddles
+2. Length: 3-4 lines that rhyme
+3. Difficulty: Challenging but solvable
+4. Style: Use clever wordplay, metaphors, or double meanings
+5. Topic: Focus on modern, relatable objects or concepts
+6. Must be family-friendly and appropriate for all ages
+
+TITLE REQUIREMENTS:
+- Must be catchy and YouTube-optimized
+- Include words like "Genius," "Tricky," or "Can You Solve"
+- 3-5 words maximum
+        """
+        logging.debug(f"Prompt created successfully:: {prompt}")
         return prompt
     
     except Exception as e:
@@ -42,17 +67,19 @@ def get_prompt():
 def get_ollama_output():
     try:
         prompt = get_prompt()
-        if not prompt:
-            return None
 
-        response = ollama.chat(model='llama3.2', messages=[
-            {
-                'role': 'user',
-                'content': prompt
-            }
-        ])
+        response = requests.post(ollamaresponseparser.getUrl(), json={
+            'model': 'llama3.1',
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ]
+        })
+        response.raise_for_status()
         
-        content = response.get('message', {}).get('content', '')
+        content = ollamaresponseparser.getParsedData(response.text)
         logging.debug(f"Ollama response content: {content}")
 
         # Extract JSON data using regex
@@ -65,12 +92,15 @@ def get_ollama_output():
             logging.warning("No valid JSON format found in the response.")
     
     except Exception as e:
-        logging.error(f"Error in get_ollama_output: {e}")
+        logging.error("Error in get_ollama_output: %s", str(e), exc_info=True)
     
     return None
 
 def insertData(riddle_data):
     try:
+        # Replace newline characters with spaces in the riddle
+        riddle_data['riddle'] = riddle_data['riddle'].replace("\n", " ")
+
         conn = sqlite3.connect('ContentData/entries.db')
         cursor = conn.cursor()
         cursor.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer) VALUES (?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer']))
@@ -90,7 +120,7 @@ def start():
         riddle_data = get_ollama_output()
         if riddle_data:
             logging.info("Riddle generation succeeded.")
-            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload()
+            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(riddle_data)
             if riddle_data['audio_path'] is None:
                 return False
             return insertData(riddle_data)

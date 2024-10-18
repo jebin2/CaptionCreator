@@ -4,12 +4,11 @@ import numpy as np
 import time
 import glob
 import os
-import logging
+from logger_config import setup_logging
+
+logging = setup_logging()
 
 directory = '/media/sf_CaptionCreator/audio/'
-
-# Get the list of all files in the directory
-list_of_files = glob.glob(os.path.join(directory, '*'))  # Get all file paths
 
 def log_message(message):
     print(f"[LOG] {message}")
@@ -127,7 +126,7 @@ def delete_source():
         time.sleep(5)
         log_message("Source file deleted successfully.")
 
-def createAudioAndDownload():
+def createAudioAndDownload(riddle_data):
     try:
         # Allow some time to switch to the desired window
         log_message("Waiting for 5 seconds before starting...")
@@ -149,9 +148,8 @@ def createAudioAndDownload():
 
         # Paste text (you can replace 'your text' with the actual text you want to paste)
         log_message("Pasting text into the input box...")
-        pyautogui.write("""I am not alive, but I grow. I don't have lungs, but I need air. I don't have a mouth, but water kills me. What am I?
-        """, interval=0.1)  # Simulate typing
-        time.sleep(2)
+        pyautogui.write(riddle_data["riddle"], interval=0.1)  # Simulate typing
+        time.sleep(5)
 
         if not find_and_click('icon/paste_input_box_insert_button.png', wait_time=5):
             log_message("Failed to find the paste input box insert button. Exiting...")
@@ -165,25 +163,22 @@ def createAudioAndDownload():
 
         # Paste text again if needed
         log_message("Pasting text into the customise field...")
-        pyautogui.write("""start with "Hello everyone, Here it goes"
-        [State riddle - Host 1 and Host 2 alternate reading each sentence]
-        Let's unlock this mystery...
-
-        First clue points to: [insight]
-        Second clue reveals: [insight]
-        Pattern shows: [insight]
-
-        The answer is[suspense]: [solution]
-        It fits because [Quick one sentence explanation]
-        "Riddle Solved. Thank you for listening"
-
-        Rules:
-        No high technical
-        Never acknowledge listener
-        Direct solving only
-        Follow sequence exactly
-        1-2 min-max time limit
-        No extra commentary""", interval=0.1)
+        pyautogui.write(f"""start with "Hello everyone, Here it goes"
+[State riddle - Host 1 and Host 2 alternate reading each sentence]
+Let's unlock this mystery...
+[Analyse and think]
+First clue points to: [insight]
+Second clue reveals: [insight]
+Pattern shows: [insight]
+The answer is: {riddle_data['answer']}
+It fits because [Quick one sentence explanation]
+"Riddle Solved. Thank you for listening"
+Rules:
+Never acknowledge listener
+Direct solving only
+Follow sequence exactly
+1-2 min-max time limit
+No extra commentary""", interval=0.1)
         time.sleep(2)
 
         if not find_and_click('icon/customize_generate_icon.png'):
@@ -202,12 +197,13 @@ def createAudioAndDownload():
         
         log_message("Process completed successfully.")
         # Ensure the directory is not empty
+        # Get the list of all files in the directory
+        list_of_files = glob.glob(os.path.join(directory, '*'))  # Get all file paths
         if list_of_files:
             # Find the most recently created file
             latest_file = max(list_of_files, key=os.path.getctime)
             print(f"The latest created file is: {latest_file}")
-
-        return directory + os.path.basename()
+            return latest_file
     
     except Exception as e:
         logging.error(f"Error updating database: {str(e)}", exc_info=True)

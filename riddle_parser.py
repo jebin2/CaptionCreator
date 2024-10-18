@@ -1,6 +1,10 @@
-import ollama
+import requests
+import ollamaresponseparser
 import json
 import re
+from logger_config import setup_logging
+
+logging = setup_logging()
 
 def get_prompt(riddle, answer, transcript, verify):
     return f"""
@@ -44,15 +48,21 @@ def get_prompt(riddle, answer, transcript, verify):
 
 def get_ollama_output(transcript, riddle, answer):
     try:
-        response = ollama.chat(model='llama3.2', messages=[
-            {
-                'role': 'user',
-                'content': get_prompt(riddle, answer, transcript, '')
-            }
-        ])
+        response = requests.post(ollamaresponseparser.getUrl(), json={
+            'model': 'llama3.1',
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': get_prompt(riddle, answer, transcript, '')
+                }
+            ]
+        })
+        response.raise_for_status()
         
-        content = response['message']['content']
-        json_match = re.search(r'\{[^{}]*\}', content)
+        content = ollamaresponseparser.getParsedData(response.text)
+        logging.debug(f"Ollama response content: {content}")
+
+        json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
             riddle_data = json.loads(json_match.group())
             if riddle_data["start"] == '' or riddle_data["end"] == '' or riddle_data["answer"] == '':
@@ -71,10 +81,12 @@ def get_ollama_output(transcript, riddle, answer):
 
 def verify_output(transcript, riddle, answer, riddle_data):
     try:
-        response = ollama.chat(model='llama3.2', messages=[
-            {
-                'role': 'user',
-                'content': get_prompt(riddle, answer, transcript, """
+        response = requests.post(ollamaresponseparser.getUrl(), json={
+            'model': 'llama3.1',
+            'messages': [
+                {
+                    'role': 'user',
+                    'content': get_prompt(riddle, answer, transcript, """
                     Below is the answer given by you previously for ther above prompt.
 
                     ansmwer: {riddle_data}
@@ -83,11 +95,15 @@ def verify_output(transcript, riddle, answer, riddle_data):
                     Is this answer correct? return the same
                     If the answer needs improvement, please make the necessary changes and provide the revised answer follow the answer format always.
                 """)
-            }
-        ])
+                }
+            ]
+        })
+        response.raise_for_status()
         
-        content = response['message']['content']
-        json_match = re.search(r'\{[^{}]*\}', content)
+        content = ollamaresponseparser.getParsedData(response.text)
+        logging.debug(f"Ollama response content: {content}")
+
+        json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
             new_riddle_data = json.loads(json_match.group())
             if new_riddle_data["start"] == '' or new_riddle_data["end"] == '' or new_riddle_data["answer"] == '':

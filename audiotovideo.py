@@ -5,9 +5,11 @@ import os
 import time
 import random
 import sqlite3
-import logging
 import riddle_parser
 import create_riddles
+from logger_config import setup_logging
+
+logging = setup_logging()
 
 BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
@@ -18,13 +20,6 @@ FONT_LABEL = 'font'
 FONT_PATH = 'Fonts'
 FONT_EXT = 'ttf'
 SHOW_ANSWER = False
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
 
 def transcribe_audio(audio_path):
     """Transcribe the given audio file using Whisper."""

@@ -14,6 +14,5 @@ sudo apt install -y \
     libxrender1 \
     libfreetype6-dev \
     libharfbuzz-dev \
-    ttf-dejavu \
     sqlite3 \
     python3-opencv

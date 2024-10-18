@@ -6,6 +6,7 @@ video/
 ContentData/node_modules/
 ContentData/entries.db
 venv/
+myenv/
 __pycache__/
 xcredentials.json
 riddleformat.txt

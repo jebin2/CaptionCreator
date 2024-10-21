@@ -7,15 +7,15 @@ import logging
 from typing import List, Tuple, Optional
 from lxml import etree
 import chess_puzzle
-import shutil
+import common
 import time
 import svgtojpg
+import custom_env
 
 # Constants
 FPS = 48
 SQUARE_SIZE = 135
 TOTAL_SIZE = 945
-BASE_DIR = Path('/home/jebineinstein/git/CaptionCreator/chess')
 DESIRED_WIDTH = 1920  # Set your desired width for YouTube video
 DESIRED_HEIGHT = 1080  # Set your desired height for YouTube video
 
@@ -223,10 +223,6 @@ def update_n_create_svg(base_path, isWhiteMove, file_name, notationFromTo, order
         logging.error(f"update_svg : {str(e)}", exc_info=True)
         return None
 
-def remove_directory(directory_path):
-    if os.path.exists(directory_path):
-        shutil.rmtree(directory_path)
-
 def make(data) -> Optional[str]:
     try:
 
@@ -240,64 +236,68 @@ def make(data) -> Optional[str]:
         
         # Create initial board
         chess_board = create_svg(
-            BASE_DIR / 'chess_board_with_puzzle.svg',
-            BASE_DIR / 'chess_board.svg',
+            custom_env.CHESS_BOARD_WITH_PUZZLE_SVG,
+            custom_env.CHESS_BOARD_SVG,
             ' '.join(white_pieces),
             ' '.join(black_pieces)
         )
         
         # Process moves
-        moves_dir = BASE_DIR / "moves"
-        remove_directory(moves_dir)
+        moves_dir = custom_env.CHESS_MOVES_PATH
+        common.remove_directory(moves_dir)
         time.sleep(1)
-        moves_dir.mkdir(exist_ok=True)
+        common.create_directory(moves_dir)
         order = 0
 
         for move_num, move in enumerate(data["solution"].values()):
             # Process white move
             if turn == 'White':
-                order = order + 1
-                chess_board = update_n_create_svg(
-                    moves_dir,
-                    True,  # is_white_move
-                    chess_board,
-                    move["white"],
-                    order
-                )
+                if move["white"]:
+                    order = order + 1
+                    chess_board = update_n_create_svg(
+                        moves_dir,
+                        True,  # is_white_move
+                        chess_board,
+                        move["white"],
+                        order
+                    )
                 
-                order = order + 1
-                chess_board = update_n_create_svg(
-                    moves_dir,
-                    False,  # is_white_move
-                    chess_board,
-                    move["black"],
-                    order
-                )
+                if move["black"]:
+                    order = order + 1
+                    chess_board = update_n_create_svg(
+                        moves_dir,
+                        False,  # is_white_move
+                        chess_board,
+                        move["black"],
+                        order
+                    )
             
             else:
-                order = order + 1
-                chess_board = update_n_create_svg(
-                    moves_dir,
-                    False,  # is_white_move
-                    chess_board,
-                    move["black"],
-                    order
-                )
+                if move["black"]:
+                    order = order + 1
+                    chess_board = update_n_create_svg(
+                        moves_dir,
+                        False,  # is_white_move
+                        chess_board,
+                        move["black"],
+                        order
+                    )
 
-                order = order + 1
-                chess_board = update_n_create_svg(
-                    moves_dir,
-                    True,  # is_white_move
-                    chess_board,
-                    move["white"],
-                    order
-                )
+                if move["white"]:
+                    order = order + 1
+                    chess_board = update_n_create_svg(
+                        moves_dir,
+                        True,  # is_white_move
+                        chess_board,
+                        move["white"],
+                        order
+                    )
         
-        return BASE_DIR
+        return custom_env.base_path
         
     except Exception as e:
         logging.error(f"Error creating chess board: {str(e)}", exc_info=True)
         return None
 
 # if __name__ == "__main__":
-    # make(chess_puzzle.fetchData())
+#     make(chess_puzzle.fetchData())

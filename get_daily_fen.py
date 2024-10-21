@@ -68,14 +68,14 @@ def print_puzzle_data(puzzles):
         print(f"URL: {puzzle['url']}")
 
 # if __name__ == "__main__":
-    # today_fen = fetch_daily_puzzles()
-    # print(f"today_fen: {today_fen}")
-    # if puzzles:
-    #     print_puzzle_data(puzzles)
+#     today_fen = fetch_daily_puzzles()
+#     print(f"today_fen: {today_fen}")
+#     if puzzles:
+#         print_puzzle_data(puzzles)
         
-    #     # Print just the FENs
-    #     print("\nJust the FENs:")
-    #     for puzzle in puzzles:
-    #         print(f"{puzzle['date']}: {puzzle['fen']}")
-    # else:
-    #     print("No puzzles found or error occurred.")
+#         # Print just the FENs
+#         print("\nJust the FENs:")
+#         for puzzle in puzzles:
+#             print(f"{puzzle['date']}: {puzzle['fen']}")
+#     else:
+#         print("No puzzles found or error occurred.")

@@ -3,12 +3,10 @@ import time
 import json
 import sqlite3
 from requests_oauthlib import OAuth1Session
+import custom_env
 from logger_config import setup_logging
 
 logging = setup_logging()
-
-# Define constants
-DATABASE_PATH = 'ContentData/entries.db'
 
 # Load Twitter API credentials from xcredentials.json
 with open('xcredentials.json', 'r') as file:
@@ -162,8 +160,8 @@ def post_to_x(title, thumbnail_path, description):
 
 def process_entries_in_db():
     """Check the database for videos to upload to Twitter."""
-    logging.info("Connecting to database: %s", DATABASE_PATH)
-    db = sqlite3.connect(DATABASE_PATH)
+    logging.info("Connecting to database: %s", custom_env.DATABASE_PATH)
+    db = sqlite3.connect(custom_env.DATABASE_PATH)
     cursor = db.cursor()
 
     # Query for entries where generatedThumbnailPath are not null

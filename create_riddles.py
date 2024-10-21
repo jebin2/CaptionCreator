@@ -135,6 +135,7 @@ No extra commentary"""
             riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(custom_instruction, riddle_data["riddle"])
             if riddle_data['audio_path'] is None:
                 return False
+
             return insertData(riddle_data)
     
     except Exception as e:

@@ -7,12 +7,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
+import custom_env
 from logger_config import setup_logging
 
 logging = setup_logging()
 
-# Define constants
-DATABASE_PATH = 'ContentData/entries.db'
 SCOPES = [
     'https://www.googleapis.com/auth/youtube.upload',
     'https://www.googleapis.com/auth/youtube',
@@ -111,7 +110,7 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description):
 def process_entries_in_db():
     """Check the database for videos to upload to YouTube."""
     logging.info("Connecting to the database...")
-    db = sqlite3.connect(DATABASE_PATH)
+    db = sqlite3.connect(custom_env.DATABASE_PATH)
     cursor = db.cursor()
 
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null

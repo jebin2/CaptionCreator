@@ -12,6 +12,7 @@ from moviepy.editor import ImageSequenceClip
 import retrieveText
 import databasecon
 import common
+import custom_env
 
 logging = setup_logging()
 
@@ -31,7 +32,7 @@ def get_random_file_name(path, label, n, ext, type=''):
     """Select a random background image from the available ones."""
     try:
         if type == 'chess':
-            return "chess/chess_board_with_puzzle.jpg"
+            return custom_env.CHESS_BOARD_WITH_PUZZLE_JPG
         random_number = random.randint(1, n)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         path_with_file_name = os.path.join(script_dir, path, f"{label}_{random_number}.{ext}")
@@ -210,7 +211,9 @@ def process(audio_path=None):
         logging.error("No transcript generated. Cannot create video.")
         return
 
-    result = databasecon.execute("SELECT thumbnailText, description, answer, type FROM entries WHERE audioPath = ?", (audio_path,), type='get')
+    result = databasecon.execute(
+        "SELECT thumbnailText, description, answer, type FROM entries WHERE audioPath = ?", (audio_path,), type='get')
+
     thumbnailText, description, answer, type = result if result else ("", "", "", "")
 
     transcript = riddle_parser.process_convo_text(transcript, description, answer)
@@ -265,7 +268,7 @@ def process(audio_path=None):
         os.remove(TEMP_FILENAME)
 
         logging.info(f"Getting Chess move files...")
-        files = common.list_files_recursive("chess/moves")
+        files = common.list_files_recursive(custom_env.CHESS_MOVES_PATH)
         filtered_files = [file for file in files if file.endswith('.jpg')]
         logging.info(f"Success.")
 
@@ -355,5 +358,5 @@ def process(audio_path=None):
     
     # common.remove_file(audio_path)
 
-if __name__ == "__main__":
-    process('/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook.wav')
+# if __name__ == "__main__":
+#     process('/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook.wav')

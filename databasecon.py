@@ -33,9 +33,9 @@ def execute(query, values=None, type='getAll'):
             conn.commit()
             conn.close()
 
-if __name__ == "__main__":
-    # Correctly format the execute call with proper type
-    results = execute("get", "SELECT audioPath FROM entries WHERE generatedVideoPath IS NULL OR generatedVideoPath = ''")
-    if results:
-        for row in results:
-            print(row)  # Print the results
+# if __name__ == "__main__":
+#     # Correctly format the execute call with proper type
+#     results = execute("get", "SELECT audioPath FROM entries WHERE generatedVideoPath IS NULL OR generatedVideoPath = ''")
+#     if results:
+#         for row in results:
+#             print(row)  # Print the results

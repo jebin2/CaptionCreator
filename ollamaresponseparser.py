@@ -15,7 +15,6 @@ def replace_multiple_spaces(content):
     return re.sub(r'\s+', ' ', content)
 
 def getParsedData(response):
-    print(f"getParsedData response: {response}")
     # Parse the response
     lines = response.splitlines()
     json_objects = []

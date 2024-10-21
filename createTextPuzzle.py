@@ -2,12 +2,13 @@ import logger_config
 logging = logger_config.setup_logging()
 
 import databasecon
-import custom_env
+import common
 import chess_board
 import chess_puzzle
 import kmcontroller
 import json
 import convertToVideo
+import create_riddles
 
 def format_moves(moves):
     formatted_moves = "The answer is "
@@ -57,23 +58,21 @@ It's {turn}'s turn.\n
 
 def start():
     try:
-        chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
-        if chess_puzzle is None:
-            logging.info("No chess puzzle is available")
+        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type !='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        if text_puzzle is None:
+            logging.info("No text puzzle is available")
             is_data_added = False
             when = 0
             while is_data_added is False:
-                logging.info(f"Getting chess puzzle today - {when}")
-                is_data_added = fetchAndUpdate(when)
+                logging.info(f"Getting text from llama...")
+                is_data_added = create_riddles.start()
                 when += 1
                 if when > 50:
                     return False
         
-        chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
-        logging.info(f"Starting to create chess puzzle... {chess_puzzle}")
+        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        logging.info(f"Starting to create text puzzle... {text_puzzle}")
 
-        data = json.loads(chess_puzzle[13])
-        chess_board.make(data)
         custom_instruction = """Start with "Hello everyone!!, Today's Chess puzzle"
 [State board - Board position slowly]
 Let's get this going...
@@ -88,16 +87,16 @@ Direct solving only
 Strictly follow sequence exactly
 No extra commentary
 """
-        source = f"""{chess_puzzle[3]}
+        source = f"""{text_puzzle[3]}
 **Answer**
-{chess_puzzle[5]}
+{text_puzzle[5]}
 
 """
-        # audio_path = kmcontroller.createAudioAndDownload(custom_instruction, source )
+        audio_path = kmcontroller.createAudioAndDownload(custom_instruction, source)
 
-        audio_path = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
+        # audio_path = "/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook(34).wav"
         
-        databasecon.execute("UPDATE entries SET audioPath = ? WHERE id = ?", (audio_path, chess_puzzle[0]))
+        databasecon.execute("UPDATE entries SET audioPath = ? WHERE id = ?", (audio_path, text_puzzle[0]))
 
         convertToVideo.process(audio_path)
 
@@ -107,5 +106,5 @@ No extra commentary
 
     return True
 
-if __name__ == "__main__":
-    start()
+# if __name__ == "__main__":
+#     start()

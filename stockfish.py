@@ -2,7 +2,8 @@ import logger_config
 logging = logger_config.setup_logging()
 
 import subprocess
-import time
+import json
+import argparse
 
 def parse_moves(pv_line):
     """Parse principal variation line into moves dictionary"""
@@ -62,7 +63,6 @@ def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx
         universal_newlines=True,
         bufsize=1
     )
-
     process.stdin.write(f"{cmd}\n")
     process.stdin.flush()
 
@@ -82,7 +82,6 @@ def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx
         
         if line.startswith("info depth") and "score mate" in line and "pv" in line:
             moves = line
-            print(f'{line}')
 
         if line.startswith("bestmove"):
             break
@@ -100,18 +99,70 @@ def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx
     return board_visual, moves
 
 
-def process(fen, depth=20, stockfish_path="/home/jebineinstein/temp/stockfish/stockfish-ubuntu-x86-64-avx2"):
+def runInHostDef(fen):
+    # Construct the command to run the script on the remote host
+    ssh_command = f"ssh jebineinstein@172.28.156.132 'python3 /home/jebineinstein/git/CaptionCreator/stockfish.py \"{fen}\"'"
+
+    try:
+        # Execute the command on the host
+        result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Decode the output from bytes to string and parse JSON
+        output = result.stdout.decode().strip()
+        print(f'Raw output From Host: {output}')
+
+        start_index = output.index("{'chess_board")
+        output = output[start_index:]
+
+        output = output.replace("'", "\"")
+        output = output.replace("None", "null")
+        # If the output is not empty, try to load it as JSON
+        if output:
+            print(f'Output From Host: {output}')
+            return json.loads(output)
+        else:
+            print("No output returned from the remote command.")
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command: {e.stderr.decode().strip()}")
+
+    except Exception as e:
+        print(f"Error executing command: {str(e)}")
     
-    board_visual, moves = stockfish_process(f"""position fen {fen}
+    return {
+        'chess_board': '',
+        'solution': ''
+    }
+
+def process(fen, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx2", runInHost=False):
+    
+    if runInHost:
+        return runInHostDef(fen)
+    else:
+        board_visual, moves = stockfish_process(f"""position fen {fen}
 d
 go
-""")
+""", stockfish_path)
     
     return {
         "chess_board": board_visual,
         "solution": moves
     }
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+    # ssh login
+    # ssh-keygen -t rsa
+    # ssh-copy-id username@remote_host_ip_or_domain
+    # ssh username@remote_host_ip_or_domain "command_to_execute"
     # process("4k3/8/4K3/8/8/8/8/8 w - - 0 1")
-    process("q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1")
+
+    # Set up argument parsing
+    # parser = argparse.ArgumentParser(description="Process a chess position using Stockfish.")
+    # parser.add_argument("fen", type=str, help="FEN string representing the chess position.")
+    # parser.add_argument("--host", action="store_true", help="Run the command on a remote host.")
+
+    # # Parse the arguments
+    # args = parser.parse_args()
+
+    # fen = args.fen if args.fen else "q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1"
+    # result = process(fen, stockfish_path='/home/jebineinstein/git/CaptionCreator/stockfish/stockfish-ubuntu-x86-64-avx2', runInHost=args.host)
+    # print(result)

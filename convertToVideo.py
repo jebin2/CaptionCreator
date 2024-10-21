@@ -366,7 +366,7 @@ def process(id, audio_path=None):
             UPDATE entries 
             SET generatedVideoPath = ?, generatedThumbnailPath = ?
             WHERE id = ?
-        """, (id, thumbnail_path, audio_path))
+        """, (output_path, thumbnail_path, id))
     
     common.remove_file(audio_path)
     return True

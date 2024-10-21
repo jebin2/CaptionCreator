@@ -126,8 +126,10 @@ def delete_source():
         time.sleep(5)
         log_message("Source file deleted successfully.")
 
-def createAudioAndDownload(riddle_data):
+def createAudioAndDownload(custom_instruction, source):
     try:
+        logging.info(F"Custom Instruction: {custom_instruction}")
+        logging.info(F"Source: {source}")
         # Allow some time to switch to the desired window
         log_message("Waiting for 5 seconds before starting...")
         time.sleep(5)
@@ -148,7 +150,7 @@ def createAudioAndDownload(riddle_data):
 
         # Paste text (you can replace 'your text' with the actual text you want to paste)
         log_message("Pasting text into the input box...")
-        pyautogui.write(riddle_data["riddle"], interval=0.1)  # Simulate typing
+        pyautogui.write(source, interval=0.1)  # Simulate typing
         time.sleep(5)
 
         if not find_and_click('icon/paste_input_box_insert_button.png', wait_time=5):
@@ -163,20 +165,7 @@ def createAudioAndDownload(riddle_data):
 
         # Paste text again if needed
         log_message("Pasting text into the customise field...")
-        pyautogui.write(f"""Start with "Hello everyone, Today's mystery"
-[State riddle - Host1 and Host2 alternate reading each sentence]
-Let's unlock this mystery...
-[Break down the clues by analyzing and thinking out loud]
-[gather insights]
-[Arrive at the answer] The answer is: {riddle_data['answer']}
-There you go, [Quick one sentence explanation]
-"Thank you for listening"
-Rules:
-Never acknowledge listener
-Direct solving only
-Strictly follow sequence exactly
-1-2 minutes min-max time limit
-No extra commentary""", interval=0.1)
+        pyautogui.write(custom_instruction, interval=0.1)
         time.sleep(2)
 
         if not find_and_click('icon/customize_generate_icon.png'):

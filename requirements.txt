@@ -11,3 +11,5 @@ numpy
 requests-oauthlib
 whisper
 colorama
+cairosvg
+lxml

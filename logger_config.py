@@ -1,7 +1,6 @@
-# logger_config.py
-
 import logging
 from colorama import Fore, Style, init
+import time
 
 def setup_logging():
     # Initialize Colorama for Windows compatibility
@@ -24,22 +23,41 @@ def setup_logging():
             return log_color + message + Style.RESET_ALL
 
     # Set up logging configuration
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger()
 
-    # Create a file handler for logging to a file (no colors in the file)
-    file_handler = logging.FileHandler('riddle_generation.log')
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    # Remove any existing handlers to avoid duplication
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
 
     # Create a console handler with colored output
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(CustomFormatter('%(asctime)s - %(levelname)s - %(message)s'))
-
-    # Add both handlers (console and file) to the root logger
-    logger = logging.getLogger()
-    logger.addHandler(file_handler)
+    
+    # Add the console handler to the logger
     logger.addHandler(console_handler)
 
+    # Set the logger level
+    logger.setLevel(logging.INFO)
+
     return logger
+
+def wait_with_logs(seconds, text=''):
+    localog = setup_logging()
+    try:
+        localog.info(f"Waiting {text} for {seconds} seconds.")
+        for i in range(seconds, 0, -1):
+            localog.info(f"Wait time remaining: {i} seconds.")
+            time.sleep(1)
+        localog.info("Wait period finished.")
+    except Exception as e:
+        localog.error(f"Error during wait: {str(e)}", exc_info=True)
+
+# Usage example
+# if __name__ == "__main__":
+#     logger = setup_logging()
+#     logger.info("This is an info message.")
+#     logger.warning("This is a warning message.")
+#     logger.error("This is an error message.")
+#     logger.debug("This is a debug message.")
+#     logger.critical("This is a critical message.")

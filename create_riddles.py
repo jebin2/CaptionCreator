@@ -31,8 +31,7 @@ def get_prompt():
                 "answer": <the solution>
             }}
         """
-        prompt = f"""
-            You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
+        prompt = f"""You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
 The answer should NOT be any of these: {oldAnswers}
 FORMAT: Return ONLY this exact JSON structure:
 {{
@@ -40,23 +39,22 @@ FORMAT: Return ONLY this exact JSON structure:
     "riddle": "Your riddle text here",
     "answer": "single word answer",
     "difficulty": "medium",
-    "category": "pick one: objects/nature/concepts/funny/clever",
+    "category": "pick one: nature/concepts/funny/clever/Mystery/Wordplay",
     "hint": "optional subtle hint"
 }}
 
 RIDDLE GUIDELINES:
-1. Make it ORIGINAL - never use common or classic riddles
+1. Make it ORIGINAL - never use common
 2. Length: 3-4 lines that rhyme
 3. Difficulty: Challenging but solvable
 4. Style: Use clever wordplay, metaphors, or double meanings
-5. Topic: Focus on modern, relatable objects or concepts
+5. Topic: Focus on traditional, relatable objects or concepts
 6. Must be family-friendly and appropriate for all ages
 
 TITLE REQUIREMENTS:
 - Must be catchy and YouTube-optimized
-- Include words like "Genius," "Tricky," or "Can You Solve"
-- 3-5 words maximum
-        """
+- Include words like "How","What","Tricky," or "Can You Solve"
+- 3-5 words maximum"""
         logging.info(f"Prompt created successfully:: {prompt}")
         return prompt
     
@@ -120,7 +118,21 @@ def start():
         riddle_data = get_ollama_output()
         if riddle_data:
             logging.info("Riddle generation succeeded.")
-            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(riddle_data)
+            custom_instruction = f"""Start with "Hello everyone, Today's mystery"
+[State riddle - Host1 and Host2 alternate reading each sentence]
+Let's unlock this mystery...
+[Break down the clues by analyzing and thinking out loud]
+[gather insights]
+[Arrive at the answer] The answer is: {riddle_data['answer']}
+There you go, [Quick one sentence explanation]
+"Thank you for listening"
+Rules:
+Never acknowledge listener
+Direct solving only
+Strictly follow sequence exactly
+1-2 minutes min-max time limit
+No extra commentary"""
+            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(custom_instruction, riddle_data["riddle"])
             if riddle_data['audio_path'] is None:
                 return False
             return insertData(riddle_data)

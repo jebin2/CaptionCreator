@@ -15,3 +15,5 @@ temp_text_image.png
 screenshot.png
 .screenshot*
 riddle_generation.log
+ContentData/chess/
+chess/moves/

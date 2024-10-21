@@ -3,6 +3,7 @@ logging = logger_config.setup_logging()
 
 import createTextPuzzle
 import createChessPuzzle
+import create_facts
 
 def createContent(interval=10):
     while True:
@@ -28,7 +29,18 @@ def createContent(interval=10):
             logging.error("Unable to create chess puzzle. please check now...")
             logging.error("Unable to create chess puzzle. please check now...")
 
-        logger_config.wait_with_logs(interval, "for next content to create...")        
+        logger_config.wait_with_logs(interval, "for next content to create...")   
+
+        is_success = create_facts.start()
+        if is_success:
+            logging.info("End")
+        else:
+            logging.error("Unable to create facts. please check now...")
+            logging.error("Unable to create facts. please check now...")
+            logging.error("Unable to create facts. please check now...")
+            logging.error("Unable to create facts. please check now...")
+
+        logger_config.wait_with_logs(interval, "for next content to create...")    
 
 if __name__ == "__main__":
     logging.info("Starting...")

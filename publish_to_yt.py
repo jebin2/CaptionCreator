@@ -8,6 +8,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 import custom_env
+import databasecon
+
 from logger_config import setup_logging
 
 logging = setup_logging()
@@ -20,8 +22,8 @@ SCOPES = [
 CLIENT_SECRETS_FILE = 'credentials.json'
 TOKEN_FILE = 'token.json'
 
-KNOW_IT_CLIENT_SECRETS_FILE = 'knowityt.json'
-KNOW_IT_TOKEN_FILE = 'knowityt-token.json'
+KNOW_IT_CLIENT_SECRETS_FILE = 'credentials.json' #'knowityt.json'
+KNOW_IT_TOKEN_FILE = 'token.json' #'knowityt-token.json'
 
 # Global services to prevent re-authentication
 youtube_service = None
@@ -135,23 +137,32 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
 
     return video_id
 
-def process_entries_in_db():
-    """Check the database for videos to upload to YouTube."""
-    logging.info("Connecting to the database...")
-    db = sqlite3.connect(custom_env.DATABASE_PATH)
-    cursor = db.cursor()
+def process_entries_in_db(type):
+    
+    logging.info("Checking whether video upload in 12hrs")
+    entries = databasecon.execute(f""" 
+        SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+        FROM entries 
+        WHERE uploadedToYoutube > {int(time.time() * 1000) - (12 *60 * 60 * 1000)} 
+        AND uploadedToYoutube < {int(time.time() * 1000)}
+        AND type = '{type}'
+    """, type='get')
+
+    logging.info(f'dfsdfsdf {entries}')
+    if entries:
+        logging.info("Will upload after 12 hrs")
+        return
 
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null
     logging.info("Fetching entries with videos and thumbnails ready for upload...")
-    cursor.execute(""" 
+    entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
         FROM entries 
         WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
         AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
         AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
-        AND type = 'text'
+        AND type = '{type}'
     """)
-    entries = cursor.fetchall()
 
     logging.info(f"Found {len(entries)} entries to process.")
     
@@ -170,22 +181,20 @@ def process_entries_in_db():
         # Mark the entry as uploaded to YouTube
         logging.info(f"Marking entry {entry_id} as uploaded to YouTube with video ID {video_id}.")
         current_timestamp_ms = int(time.time() * 1000)
-        cursor.execute("UPDATE entries SET uploadedToYoutube = ?, youtubeVideoId = ? WHERE id = ?", (current_timestamp_ms, video_id, entry_id,))
-        db.commit()
+        databasecon.execute("UPDATE entries SET uploadedToYoutube = ?, youtubeVideoId = ? WHERE id = ?", (current_timestamp_ms, video_id, entry_id,))
         logging.info(f"Entry {entry_id} successfully updated in the database.")
 
         logging.info("Sleeping for 1 minute before next upload...")
-        wait_with_logs(60)  # 1 minute
-
-    logging.info("Closing the database connection.")
-    db.close()
+        break
 
 def monitor_database(interval=10):
     """Periodically check the database for new videos to upload."""
     logging.info(f"Starting database monitor with an interval of {interval} seconds.")
     while True:
         logging.info("Checking the database for new entries.")
-        process_entries_in_db()
+        process_entries_in_db('text')
+        process_entries_in_db('chess')
+        process_entries_in_db('facts')
         logging.info(f"Sleeping for {interval} seconds before next check.")
         wait_with_logs(interval)
 

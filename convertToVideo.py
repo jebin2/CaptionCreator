@@ -233,6 +233,10 @@ def process(id, audio_path=None):
     background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT, type)
     audio = AudioFileClip(audio_path)
 
+    if audio.duration > 60 and type == 'facts':
+        logging.error(f"facts cannot be more than 60 sec: {audio.duration}")
+        return False
+
     # Split transcript into sentences and calculate total words
     sentences = transcript.split('. ')
     start_segment = None
@@ -361,8 +365,8 @@ def process(id, audio_path=None):
     databasecon.execute("""
             UPDATE entries 
             SET generatedVideoPath = ?, generatedThumbnailPath = ?
-            WHERE audioPath = ?
-        """, (output_path, thumbnail_path, audio_path))
+            WHERE id = ?
+        """, (id, thumbnail_path, audio_path))
     
     common.remove_file(audio_path)
     return True

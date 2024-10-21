@@ -120,7 +120,7 @@ def start():
                     UPDATE entries 
                     SET audioPath = 'Done'
                     WHERE id = ?
-                """, (chess_puzzle[0]))
+                """, (chess_puzzle[0],))
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)

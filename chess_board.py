@@ -13,7 +13,6 @@ import svgtojpg
 import custom_env
 
 # Constants
-FPS = 48
 SQUARE_SIZE = 135
 TOTAL_SIZE = 945
 DESIRED_WIDTH = 1920  # Set your desired width for YouTube video
@@ -194,7 +193,7 @@ def update_n_create_svg(base_path, isWhiteMove, file_name, notationFromTo, order
         toX, toY = convert_chess_notation_to_pixels(notationFromTo[2], notationFromTo[3])
         logging.info(f"Move from ({fromX}, {fromY}) - To ({toX}, {toY})")
 
-        points = pointsToMove(fromX, fromY, toX, toY, FPS)
+        points = pointsToMove(fromX, fromY, toX, toY, custom_env.FPS)
         count = 0
         removeNotation = notationFromTo[:2] + " " + notationFromTo[2:]
         tree = etree.parse(file_name)
@@ -211,7 +210,7 @@ def update_n_create_svg(base_path, isWhiteMove, file_name, notationFromTo, order
                 addNotation if not isWhiteMove else None,  # Fixed: Logic error
                 removeNotation=removeNotation,
                 point=point,
-                removeDestPiece=(count + 1 == FPS)
+                removeDestPiece=(count + 1 == custom_env.FPS)
             )
             tree.write(output_svg_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
             svgtojpg.convert_svg_to_jpg(output_svg_file, str(output_svg_file).replace(".svg", ".jpg"), DESIRED_WIDTH, DESIRED_HEIGHT)

@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import subprocess
 import shutil
+import string
+import random
 
 def file_exists(file_path):
     return Path(file_path).is_file()
@@ -56,3 +58,10 @@ def create_directory(directory_path):
         print(f'Directory created at: {directory_path}')
     except Exception as e:
         print(f'An error occurred: {e}')
+
+def generate_random_string(length=6):
+    # Define the characters to choose from (uppercase, lowercase, digits)
+    characters = string.ascii_letters
+    # Generate a random string
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string

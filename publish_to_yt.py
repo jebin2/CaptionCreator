@@ -18,6 +18,7 @@ SCOPES = [
     'https://www.googleapis.com/auth/youtube.force-ssl'
 ]
 CLIENT_SECRETS_FILE = 'credentials.json'
+TOKEN_FILE = 'token.json'
 
 # Global services to prevent re-authentication
 youtube_service = None
@@ -31,21 +32,30 @@ def get_youtube_service():
 
     logging.info("Checking for stored credentials...")
     creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists(TOKEN_FILE):
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
         logging.info("Found existing credentials.")
 
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
+    # Refresh the token if it's expired
+    if creds and creds.expired and creds.refresh_token:
+        try:
             logging.info("Refreshing expired credentials...")
-            creds.refresh(Request())
+            creds.refresh(Request())  # This will use the refresh token to get a new access token
             logging.info("Credentials refreshed successfully.")
-        else:
-            logging.info("No valid credentials found. Initiating authentication flow.")
+        except Exception as e:
+            logging.error(f"Error refreshing token: {e}")
+            creds = None  # Reset creds to trigger new auth flow
+
+    # If no valid credentials are available, prompt the user to log in again
+    if not creds or not creds.valid:
+        if not creds or not creds.refresh_token:
+            logging.info("No valid credentials or refresh token found. Initiating authentication flow.")
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
             logging.info("New credentials obtained successfully.")
-        with open('token.json', 'w') as token:
+        
+        # Save the credentials to the file for the next run
+        with open(TOKEN_FILE, 'w') as token:
             token.write(creds.to_json())
             logging.info("Credentials saved to 'token.json'.")
 
@@ -121,6 +131,7 @@ def process_entries_in_db():
         WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
         AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
         AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
+        AND type != 'chess'
     """)
     entries = cursor.fetchall()
 

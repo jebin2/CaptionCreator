@@ -25,7 +25,6 @@ FONT_LABEL = 'font'
 FONT_PATH = 'Fonts'
 FONT_EXT = 'ttf'
 SHOW_ANSWER = False
-FPS = 48
 TEMP_FILENAME = 'temp_text_image.png'
 IMAGE_SIZE=(1920, 1080)
 
@@ -230,7 +229,7 @@ def process(audio_path=None):
 
     # Extract file name for output
     filename = os.path.basename(audio_path)
-    output_filename = filename.replace(".wav", ".mp4")
+    output_filename = f"{common.generate_random_string()}.mp4"
 
     # Load background image
     background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT, type)
@@ -275,18 +274,24 @@ def process(audio_path=None):
         logging.info(f"Success.")
 
         secondCount = 0
-        move_duration = (end_time-4 - start_show_answer)/len(filtered_files)
-        # move_duration = 2/FPS
-        for i in range(1, 11):  # Adjust the upper limit as needed
-            for j in range(FPS):
+        # move_duration = round((end_time-4 - start_show_answer)/len(filtered_files), 2)
+        move_duration = 2/custom_env.FPS
+        can_break = False
+        for i in range(1, 10):  # Adjust the upper limit as needed
+            for j in range(custom_env.FPS):
                 # Filtering files based on the expected naming convention
-                filtered_files = [file for file in files if file.endswith(f'new_chess_board-update-{i}-{j}.jpg')]
+                file_in_order = [file for file in filtered_files if file.endswith(f'new_chess_board-update-{i}-{j}.jpg')]
                 
-                if filtered_files:
-                    clip = ImageClip(filtered_files[0]).set_duration(move_duration).set_start(start_show_answer + secondCount)
+                if file_in_order:
+                    clip = ImageClip(file_in_order[0]).set_duration(move_duration).set_start(start_show_answer + secondCount)
                     txt_clips.append(clip)
+                    logging.info(f"Clip created for file {file_in_order[0]} start at {start_show_answer}")
                     secondCount += move_duration  # Increment for the next clip duration
-                
+                else:
+                    can_break = True
+                    break
+            if can_break:
+                break
     else:
         font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
         for i, segment in enumerate(segments):
@@ -317,14 +322,16 @@ def process(audio_path=None):
             logging.error("No text clips could be created. Cannot generate video.")
             return False
     
+    logging.info(f"Combining audio {len(txt_clips)}")
     # Combine subtitle clips and audio into a single video
     subtitles_clip = CompositeVideoClip(txt_clips)
+    logging.info(f"Combining audio Done")
     video = CompositeVideoClip([subtitles_clip.set_audio(audio)])  # Use trimmed audio here
 
     # Output video file
     output_path = os.path.join("video", output_filename)
     logging.info(f"Rendering video: {output_path}")
-    video.write_videofile(output_path, fps=24)
+    video.write_videofile(output_path, fps=custom_env.FPS)
     logging.info(f"Video saved as {output_path}")
     
     # Generate and save the thumbnail

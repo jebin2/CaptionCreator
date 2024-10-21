@@ -101,7 +101,7 @@ def start():
         chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create chess puzzle... {chess_puzzle}")
 
-        if common.file_exists(chess_puzzle[1]):
+        if common.file_exists(chess_puzzle[1]) is False:
             audio_path = getAudioPath(chess_puzzle[3], chess_puzzle[5])
             databasecon.execute("""
                     UPDATE entries 
@@ -109,7 +109,7 @@ def start():
                     WHERE id = ?
                 """, (audio_path, chess_puzzle[0]))
             
-            chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (chess_puzzle[0]), type='get')
+            chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (chess_puzzle[0],), type='get')
 
         data = json.loads(chess_puzzle[13])
         chess_board.make(data)
@@ -122,5 +122,5 @@ def start():
 
     return True
 
-if __name__ == "__main__":
-    start()
+# if __name__ == "__main__":
+#     start()

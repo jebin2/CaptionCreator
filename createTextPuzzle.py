@@ -71,13 +71,13 @@ def start():
         text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {text_puzzle}")
 
-        if common.file_exists(text_puzzle[1]):
+        if common.file_exists(text_puzzle[1]) is False:
             create_riddles.start({
                 'id': text_puzzle[0],
                 'riddle': text_puzzle[3],
                 'answer': text_puzzle[5],
             })
-            text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')",(text_puzzle[0]),  type='get')
+            text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (text_puzzle[0],),  type='get')
         
         is_success = convertToVideo.process(text_puzzle[1])
 
@@ -87,5 +87,5 @@ def start():
 
     return is_success
 
-if __name__ == "__main__":
-    start()
+# if __name__ == "__main__":
+#     start()

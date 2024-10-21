@@ -17,7 +17,7 @@ def createContent(interval=10):
             logging.error("Unable to create text puzzle. please check now...")
             logging.error("Unable to create text puzzle. please check now...")
 
-        logging.info("Starting for text puzzle to process...")
+        logging.info("Starting for chess puzzle to process...")
         
         is_success = createChessPuzzle.start()
         if is_success:

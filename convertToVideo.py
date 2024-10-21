@@ -206,7 +206,7 @@ def resize_thumbnail(thumbnail_path):
 
 def process(audio_path=None):
     logging.info(f"Processing audio:: {audio_path}")
-    if common.file_exists(audio_path):
+    if common.file_exists(audio_path) is False:
         return False
     transcript, segments = retrieveText.parse(audio_path)
     if not transcript:
@@ -315,7 +315,7 @@ def process(audio_path=None):
         
         if not txt_clips:
             logging.error("No text clips could be created. Cannot generate video.")
-            return
+            return False
     
     # Combine subtitle clips and audio into a single video
     subtitles_clip = CompositeVideoClip(txt_clips)

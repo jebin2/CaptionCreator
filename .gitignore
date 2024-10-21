@@ -20,3 +20,5 @@ chess/moves/
 stockfish/
 chess/chess_board_with_puzzle*
 chess/moves/
+knowityt.json
+knowityt-token.json

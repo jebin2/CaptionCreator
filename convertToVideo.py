@@ -67,10 +67,10 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
 
     return None
 
-def create_text_image(text, background_path, temp_filename, font_path, font_size=70, padding=50, extra_space=100, stroke_width=2, description="", answer=""):
+def create_text_image(text, background_path, temp_filename, font_path, font_size=70, padding=50, extra_space=100, stroke_width=2, description="", answer="", img_size=IMAGE_SIZE):
     logging.info(f"Creating text image with background: {background_path}")
     try:
-        background = Image.open(background_path).resize(IMAGE_SIZE)
+        background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
         font = ImageFont.truetype(font_path, font_size)
 
@@ -98,7 +98,7 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
         if description:
             static_font_size = int(font_size * 0.8)  # Slightly smaller font for static text
             static_font = ImageFont.truetype(font_path, static_font_size)
-            max_static_width = IMAGE_SIZE[0] - (2 * padding) - (2 * extra_space)
+            max_static_width = img_size[0] - (2 * padding) - (2 * extra_space)
 
             # Wrap the static text
             wrapped_static_text = wrap_text(description, static_font, max_static_width)
@@ -110,7 +110,7 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
             # Draw the black border (stroke) for the static text at the top
             for i, line in enumerate(wrapped_static_text):
                 text_width = draw.textbbox((0, 0), line, font=static_font)[2] - draw.textbbox((0, 0), line, font=static_font)[0]
-                static_x = (IMAGE_SIZE[0] - text_width) / 2  # Center the text horizontally
+                static_x = (img_size[0] - text_width) / 2  # Center the text horizontally
                 
                 for dx in range(-stroke_width, stroke_width + 1):
                     for dy in range(-stroke_width, stroke_width + 1):
@@ -120,26 +120,26 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
             # Draw the white static text on top of the black stroke
             for i, line in enumerate(wrapped_static_text):
                 text_width = draw.textbbox((0, 0), line, font=static_font)[2] - draw.textbbox((0, 0), line, font=static_font)[0]
-                static_x = (IMAGE_SIZE[0] - text_width) / 2  # Center the text horizontally
+                static_x = (img_size[0] - text_width) / 2  # Center the text horizontally
                 draw.text((static_x, static_y + i * (static_font_size + 10)), line, font=static_font, fill="white")
 
         # Draw static text at the bottom
         if answer:
             bottom_font_size = int(font_size * 0.8)
             bottom_font = ImageFont.truetype(font_path, bottom_font_size)
-            max_bottom_width = IMAGE_SIZE[0] - (2 * padding) - (2 * extra_space)
+            max_bottom_width = img_size[0] - (2 * padding) - (2 * extra_space)
 
             # Wrap the bottom static text with the prefix
             wrapped_bottom_text = wrap_text("Answer is :: " + answer, bottom_font, max_bottom_width)
 
             # Calculate y-position for the bottom static text
             total_bottom_height = len(wrapped_bottom_text) * (bottom_font_size + 10)
-            bottom_y = IMAGE_SIZE[1] - total_bottom_height - padding
+            bottom_y = img_size[1] - total_bottom_height - padding
 
             # Draw the black border for bottom static text
             for i, line in enumerate(wrapped_bottom_text):
                 text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
-                bottom_x = (IMAGE_SIZE[0] - text_width) / 2  # Center the text horizontally
+                bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
                 
                 for dx in range(-stroke_width, stroke_width + 1):
                     for dy in range(-stroke_width, stroke_width + 1):
@@ -149,16 +149,16 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
             # Draw the white bottom static text on top of the black stroke
             for i, line in enumerate(wrapped_bottom_text):
                 text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
-                bottom_x = (IMAGE_SIZE[0] - text_width) / 2  # Center the text horizontally
+                bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
                 draw.text((bottom_x, bottom_y + i * (bottom_font_size + 10)), line, font=bottom_font, fill="white")
 
         # Process the main text
-        max_text_width = IMAGE_SIZE[0] - (2 * padding) - (2 * extra_space)
+        max_text_width = img_size[0] - (2 * padding) - (2 * extra_space)
         wrapped_text = wrap_text(text, font, max_text_width)
 
         total_height = len(wrapped_text) * (font_size + 10)
-        x = (IMAGE_SIZE[0] - (IMAGE_SIZE[0] - (2 * padding) - (2 * extra_space))) / 2
-        y = (IMAGE_SIZE[1] - total_height) / 2
+        x = (img_size[0] - (img_size[0] - (2 * padding) - (2 * extra_space))) / 2
+        y = (img_size[1] - total_height) / 2
 
         # Draw the black border for each letter of dynamic text
         for i, line in enumerate(wrapped_text):
@@ -203,7 +203,7 @@ def resize_thumbnail(thumbnail_path):
         logging.error(f"Error resizing thumbnail: {str(e)}", exc_info=True)
         return thumbnail_path
 
-def process(audio_path=None):
+def process(id, audio_path=None):
     logging.info(f"Processing audio:: {audio_path}")
     if common.file_exists(audio_path) is False:
         return False
@@ -212,8 +212,7 @@ def process(audio_path=None):
         logging.error("No transcript generated. Cannot create video.")
         return False
 
-    result = databasecon.execute(
-        "SELECT thumbnailText, description, answer, type FROM entries WHERE audioPath = ?", (audio_path,), type='get')
+    result = databasecon.execute("SELECT thumbnailText, description, answer, type FROM entries WHERE id = ?", (id,), type='get')
 
     thumbnailText, description, answer, type = result if result else ("", "", "", "")
 
@@ -228,7 +227,6 @@ def process(audio_path=None):
     logging.info(f"Parsed transcript: {highlighted_transcript}")
 
     # Extract file name for output
-    filename = os.path.basename(audio_path)
     output_filename = f"{common.generate_random_string()}.mp4"
 
     # Load background image
@@ -255,7 +253,7 @@ def process(audio_path=None):
             show_ans_segment = find_segment_time(sentence, segments, "start", start_segment)
 
     start_show_answer = show_ans_segment['start'] if show_ans_segment and 'start' in show_ans_segment else audio.duration / 2
-    end_time = segments[-1]['end']
+    # end_time = segments[-1]['end']
 
     txt_clips = []
     if type == 'chess':
@@ -302,16 +300,18 @@ def process(audio_path=None):
                     background_path,
                     TEMP_FILENAME,
                     font_path,
-                    description=description,
-                    answer="" if show_ans_segment is None or segment is None or show_ans_segment["start"] > segment["start"] else answer
+                    description='' if type == 'facts' else description,
+                    answer="" if type == 'facts' or show_ans_segment is None or segment is None or show_ans_segment["start"] > segment["start"] else answer,
+                    img_size=IMAGE_SIZE[::-1] if type == "facts" else IMAGE_SIZE
                 )
                 if i < len(segments) - 1:
                     duration = round(segments[i + 1]["end"] - segment["start"], 2)
                 else:
                     duration = round(segment["end"] - segment["start"], 2)
+
                 clip = ImageClip(temp_image_path).set_duration(duration).set_start(segment["start"])
-                # clip = ImageSequenceClip(image_files, fps=fps)
                 txt_clips.append(clip)
+
                 os.remove(temp_image_path)
                 logging.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
 
@@ -344,10 +344,11 @@ def process(audio_path=None):
             background.save(thumbnail_path)
         else:
             create_text_image(
-                thumbnailText, 
+                "", 
                 background_path,
                 thumbnail_path,
-                font_path
+                font_path,
+                img_size=IMAGE_SIZE[::-1] if type == "facts" else IMAGE_SIZE
             )
 
         logging.info(f"Thumbnail created: {thumbnail_path}")

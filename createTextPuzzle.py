@@ -56,7 +56,7 @@ It's {turn}'s turn.\n
 
 def start():
     try:
-        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type !='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type ='text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         if text_puzzle is None:
             logging.info("No text puzzle is available")
             is_data_added = False
@@ -68,7 +68,7 @@ def start():
                 if when > 50:
                     return False
         
-        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type = 'text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {text_puzzle}")
 
         if common.file_exists(text_puzzle[1]) is False:
@@ -77,9 +77,9 @@ def start():
                 'riddle': text_puzzle[3],
                 'answer': text_puzzle[5],
             })
-            text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (text_puzzle[0],),  type='get')
+            text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type = 'text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (text_puzzle[0],),  type='get')
         
-        is_success = convertToVideo.process(text_puzzle[1])
+        is_success = convertToVideo.process(text_puzzle[0], text_puzzle[1])
         
         databasecon.execute("""
                     UPDATE entries 

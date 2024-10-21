@@ -59,7 +59,7 @@ FORMAT: Return ONLY this exact JSON structure:
     "riddle": "Your riddle text here",
     "answer": "single word answer",
     "difficulty": "medium",
-    "category": "pick one: nature/concepts/funny/clever/Mystery/Wordplay",
+    "category": "pick one: nature/concepts/funny/clever/Mystery/Wordplay/facts-based/food",
     "hint": "optional subtle hint"
 }}
 

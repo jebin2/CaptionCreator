@@ -114,7 +114,7 @@ def start():
         data = json.loads(chess_puzzle[13])
         chess_board.make(data)
 
-        is_success = convertToVideo.process(chess_puzzle[1])
+        is_success = convertToVideo.process(chess_puzzle[0], chess_puzzle[1])
 
         databasecon.execute("""
                     UPDATE entries 

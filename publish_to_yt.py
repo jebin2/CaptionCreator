@@ -20,20 +20,29 @@ SCOPES = [
 CLIENT_SECRETS_FILE = 'credentials.json'
 TOKEN_FILE = 'token.json'
 
+KNOW_IT_CLIENT_SECRETS_FILE = 'knowityt.json'
+KNOW_IT_TOKEN_FILE = 'knowityt-token.json'
+
 # Global services to prevent re-authentication
 youtube_service = None
+know_it_youtube_service = None
 
-def get_youtube_service():
-    """Authenticate and return a YouTube service object."""
+def get_youtube_service(type='text'):
     global youtube_service
-    if youtube_service:
+    if type == 'text' and youtube_service:
         logging.info("Using existing YouTube service.")
         return youtube_service
+    
+    if type == 'facts' and know_it_youtube_service:
+        logging.info("Using existing KnowIt YouTube service.")
+        return youtube_service
 
+    specific_token = TOKEN_FILE if type == 'text' else KNOW_IT_TOKEN_FILE
+    specific_client = CLIENT_SECRETS_FILE if type == 'text' else KNOW_IT_CLIENT_SECRETS_FILE
     logging.info("Checking for stored credentials...")
     creds = None
-    if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    if os.path.exists(specific_token):
+        creds = Credentials.from_authorized_user_file(specific_token, SCOPES)
         logging.info("Found existing credentials.")
 
     # Refresh the token if it's expired
@@ -50,12 +59,12 @@ def get_youtube_service():
     if not creds or not creds.valid:
         if not creds or not creds.refresh_token:
             logging.info("No valid credentials or refresh token found. Initiating authentication flow.")
-            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(specific_client, SCOPES)
             creds = flow.run_local_server(port=0)
             logging.info("New credentials obtained successfully.")
         
         # Save the credentials to the file for the next run
-        with open(TOKEN_FILE, 'w') as token:
+        with open(specific_token, 'w') as token:
             token.write(creds.to_json())
             logging.info("Credentials saved to 'token.json'.")
 
@@ -64,22 +73,28 @@ def get_youtube_service():
     logging.info("YouTube service built successfully.")
     return youtube_service
 
-def upload_video_to_youtube(video_path, thumbnail_path, title, description):
+def upload_video_to_youtube(video_path, thumbnail_path, title, description, type='text'):
     """Upload a video to YouTube and set the thumbnail."""
     logging.info(f"Starting upload for video: {video_path}")
 
-    youtube = get_youtube_service()
+    youtube = get_youtube_service(type)
 
     # Set the video details
     final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
+    tags = ['riddle', 'thinking', 'fun', 'challenges']
     if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge"
+        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge\n\n\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
+    
+    if 'facts' == type:
+        final_des = "#shorts #interesting"
+        tags.append("shorts")
+
     request_body = {
         'snippet': {
             'categoryId': '22',  # Category for "People & Blogs"
             'title': title,
-            'description': description + "\n\n#riddle #thinking #fun #challenges",
-            'tags': ['riddle', 'thinking', 'fun', 'challenges'],  # Add any relevant tags
+            'description': final_des,
+            'tags': tags,  # Add any relevant tags
             'playlists': ['Riddle']  # Set the playlists here
         },
         'status': {
@@ -129,12 +144,12 @@ def process_entries_in_db():
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null
     logging.info("Fetching entries with videos and thumbnails ready for upload...")
     cursor.execute(""" 
-        SELECT id, title, description, generatedVideoPath, generatedThumbnailPath 
+        SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
         FROM entries 
         WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
         AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
         AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
-        AND type != 'chess'
+        AND type = 'text'
     """)
     entries = cursor.fetchall()
 
@@ -142,11 +157,11 @@ def process_entries_in_db():
     
     # Upload videos to YouTube
     for entry in entries:
-        entry_id, title, description, video_path, thumbnail_path = entry
+        entry_id, title, description, video_path, thumbnail_path, type = entry
         logging.info(f"Processing entry {entry_id}: {title}")
 
         # Upload the video to YouTube
-        video_id = upload_video_to_youtube(video_path, thumbnail_path, title, description)
+        video_id = upload_video_to_youtube(video_path, thumbnail_path, title, description, type)
         
         if not video_id:
             logging.error(f"Error uploading video for entry {entry_id}. Stopping further uploads.")

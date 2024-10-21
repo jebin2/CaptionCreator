@@ -155,6 +155,26 @@ def post_to_x(title, thumbnail_path, description):
         raise Exception("Request returned an error when replying to tweet: {} {}".format(response.status_code, response.text))
 
     logging.info("Description replied successfully.")
+
+    if 'Chess' in title:
+        chess_link = f"https://www.chess.com/daily-chess-puzzle/{title[-10]}"
+
+        # Step 4: Reply with the description
+        reply_payload = {
+            "text": chess_link,
+            "reply": {
+                "in_reply_to_tweet_id": tweet_id  # Specify the tweet ID you're replying to
+            }
+        }
+
+        logging.info("Replying to tweet ID: %s with description.", tweet_id)
+        response = oauth.post(tweet_url_v2, json=reply_payload)
+
+        if response.status_code != 201:
+            logging.error("Reply to tweet failed: %s %s", response.status_code, response.text)
+            raise Exception("Request returned an error when replying to tweet: {} {}".format(response.status_code, response.text))
+
+        logging.info("Chess Link replied successfully.")
     
     return tweet_id
 

@@ -18,3 +18,5 @@ riddle_generation.log
 ContentData/chess/
 chess/moves/
 stockfish/
+chess/chess_board_with_puzzle*
+chess/moves/

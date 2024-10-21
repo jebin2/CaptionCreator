@@ -2,13 +2,11 @@ import logger_config
 logging = logger_config.setup_logging()
 
 import databasecon
-import common
-import chess_board
 import chess_puzzle
-import kmcontroller
 import json
 import convertToVideo
 import create_riddles
+import common
 
 def format_moves(moves):
     formatted_moves = "The answer is "
@@ -73,13 +71,21 @@ def start():
         text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {text_puzzle}")
 
-        convertToVideo.process(text_puzzle[1])
+        if common.file_exists(text_puzzle[1]):
+            create_riddles.start({
+                'id': text_puzzle[0],
+                'riddle': text_puzzle[3],
+                'answer': text_puzzle[5],
+            })
+            text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')",(text_puzzle[0]),  type='get')
+        
+        is_success = convertToVideo.process(text_puzzle[1])
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)
         return False
 
-    return True
+    return is_success
 
 if __name__ == "__main__":
     start()

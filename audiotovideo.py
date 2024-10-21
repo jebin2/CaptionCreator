@@ -22,7 +22,6 @@ FONT_EXT = 'ttf'
 SHOW_ANSWER = False
 
 def transcribe_audio(audio_path):
-    """Transcribe the given audio file using Whisper."""
     try:
         logging.info(f"Starting audio transcription for: {audio_path}")
 
@@ -222,7 +221,6 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
 
 
 def create_video_from_audio(audio_path):
-    """Create a video from audio with transcribed text as subtitles."""
     logging.info(f"Starting video creation for audio: {audio_path}")
     
     transcript, segments = transcribe_audio(audio_path)
@@ -233,7 +231,7 @@ def create_video_from_audio(audio_path):
     # Retrieve metadata from the database
     conn = sqlite3.connect('ContentData/entries.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT thumbnailText, description, answer FROM entries WHERE audioPath = ?", (audio_path,))
+    cursor.execute("SELECT thumbnailText, description, answer FROM entries WHERE audioPath = ?", (audio_path))
     result = cursor.fetchone()
     thumbnailText, top_static_text, bottom_static_text = result if result else ("", "", "")
     conn.close()
@@ -400,6 +398,6 @@ def wait_with_logs(seconds):
     except Exception as e:
         logging.error(f"Error during wait: {str(e)}")
 
-if __name__ == "__main__":
-    logging.info("Starting video generation script")
-    check_for_new_entries()
+# if __name__ == "__main__":
+#     logging.info("Starting video generation script")
+#     check_for_new_entries()

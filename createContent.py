@@ -8,7 +8,7 @@ def createContent(interval=10):
     while True:
         logging.info("Starting for text puzzle to process...")
 
-        createTextPuzzle.start()
+        is_success = createTextPuzzle.start()
         if is_success:
             logging.info("End")
         else:

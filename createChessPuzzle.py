@@ -2,7 +2,7 @@ import logger_config
 logging = logger_config.setup_logging()
 
 import databasecon
-import custom_env
+import common
 import chess_board
 import chess_puzzle
 import kmcontroller
@@ -52,6 +52,9 @@ def format_moves(moves):
     # Join all moves with a comma and return
     return formatted_moves
 
+def getAudioPath(description, answer):
+    return kmcontroller.createAudioAndDownload(getCustomInstruction(), getSource(description, answer))
+
 def fetchAndUpdate(when):
     data = chess_puzzle.fetchData(when)
     if data is None:
@@ -75,8 +78,7 @@ It's {turn}'s turn.\n
 
     answer = format_moves(data['solution'])
 
-    audio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(), getSource(description, answer))
-    # audio_path = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
+    audio_path = getAudioPath(description, answer)
 
     databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, type, answer, chess_meta, chess_fen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (audio_path, f'How to solve Chess.com daily puzzle : {date}', description, 'Check my video for solution', 'chess', answer, json.dumps(data), fen))
 
@@ -99,10 +101,20 @@ def start():
         chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create chess puzzle... {chess_puzzle}")
 
+        if common.file_exists(chess_puzzle[1]):
+            audio_path = getAudioPath(chess_puzzle[3], chess_puzzle[5])
+            databasecon.execute("""
+                    UPDATE entries 
+                    SET audioPath = ?
+                    WHERE id = ?
+                """, (audio_path, chess_puzzle[0]))
+            
+            chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (chess_puzzle[0]), type='get')
+
         data = json.loads(chess_puzzle[13])
         chess_board.make(data)
 
-        convertToVideo.process(chess_puzzle[1])
+        is_success = convertToVideo.process(chess_puzzle[1])
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)

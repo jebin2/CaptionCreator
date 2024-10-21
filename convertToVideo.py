@@ -206,10 +206,12 @@ def resize_thumbnail(thumbnail_path):
 
 def process(audio_path=None):
     logging.info(f"Processing audio:: {audio_path}")
+    if common.file_exists(audio_path):
+        return False
     transcript, segments = retrieveText.parse(audio_path)
     if not transcript:
         logging.error("No transcript generated. Cannot create video.")
-        return
+        return False
 
     result = databasecon.execute(
         "SELECT thumbnailText, description, answer, type FROM entries WHERE audioPath = ?", (audio_path,), type='get')
@@ -219,7 +221,7 @@ def process(audio_path=None):
     transcript = riddle_parser.process_convo_text(transcript, description, answer)
     if transcript is None:
         logging.error("No transcript generated. Cannot create video.")
-        return
+        return False
     
     highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
                                         .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
@@ -354,7 +356,8 @@ def process(audio_path=None):
             WHERE audioPath = ?
         """, (output_path, thumbnail_path, audio_path))
     
-    # common.remove_file(audio_path)
+    common.remove_file(audio_path)
+    return True
 
 # if __name__ == "__main__":
 #     process('/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook.wav')

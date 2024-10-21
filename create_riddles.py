@@ -6,7 +6,6 @@ from logger_config import setup_logging
 import requests
 import ollamaresponseparser
 import databasecon
-import custom_env
 
 logging = setup_logging()
 
@@ -115,14 +114,25 @@ def get_ollama_output():
     
     return None
 
-def start():
+def start(riddle_data=None):
     try:
-        riddle_data = get_ollama_output()
+        hasRiddleAlready = False
+        if riddle_data is not None:
+            hasRiddleAlready = True
+        riddle_data = riddle_data if hasRiddleAlready else get_ollama_output()
         if riddle_data:
             logging.info("Riddle generation succeeded.")
-            # riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(riddle_data['answer']), getSource(riddle_data["riddle"]))
-            riddle_data['audio_path'] = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
-            databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer'], 'text'))
+            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(riddle_data['answer']), getSource(riddle_data["riddle"]))
+
+            if hasRiddleAlready:
+                databasecon.execute("""
+                    UPDATE entries 
+                    SET audioPath = ?
+                    WHERE id = ?
+                """, (riddle_data['audio_path'], riddle_data['id']))
+            else:
+                databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer'], 'text'))
+
             return True
     
     except Exception as e:

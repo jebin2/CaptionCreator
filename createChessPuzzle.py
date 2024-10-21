@@ -9,6 +9,29 @@ import kmcontroller
 import json
 import convertToVideo
 
+def getCustomInstruction():
+    return """Start with "Hello everyone!!, Today's Chess puzzle"
+[State board - Board position slowly]
+Let's get this going...
+[Break down the clues by analyzing and thinking out loud]
+[gather insights]
+[Arrive at the answer] The answer is [first move]
+There you go, [Explanation by playing the answer one by one]
+"Thank you for listening"
+Rules:
+Never acknowledge listener
+Direct solving only
+Strictly follow sequence exactly
+No extra commentary
+"""
+
+def getSource(description, answer):
+    return f"""{description}
+**Answer**
+{answer}
+
+"""
+
 def format_moves(moves):
     formatted_moves = "The answer is "
     for move in moves.values():
@@ -51,7 +74,11 @@ It's {turn}'s turn.\n
         return False
 
     answer = format_moves(data['solution'])
-    databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, type, answer, chess_meta, chess_fen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", ('--', f'How to solve Chess.com daily puzzle : {date}', description, 'Check my video for solution', 'chess', answer, json.dumps(data), fen))
+
+    audio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(), getSource(description, answer))
+    # audio_path = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
+
+    databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, type, answer, chess_meta, chess_fen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (audio_path, f'How to solve Chess.com daily puzzle : {date}', description, 'Check my video for solution', 'chess', answer, json.dumps(data), fen))
 
     return True
 
@@ -74,32 +101,8 @@ def start():
 
         data = json.loads(chess_puzzle[13])
         chess_board.make(data)
-        custom_instruction = """Start with "Hello everyone!!, Today's Chess puzzle"
-[State board - Board position slowly]
-Let's get this going...
-[Break down the clues by analyzing and thinking out loud]
-[gather insights]
-[Arrive at the answer] The answer is [first move]
-There you go, [Explanation by playing the answer one by one]
-"Thank you for listening"
-Rules:
-Never acknowledge listener
-Direct solving only
-Strictly follow sequence exactly
-No extra commentary
-"""
-        source = f"""{chess_puzzle[3]}
-**Answer**
-{chess_puzzle[5]}
 
-"""
-        # audio_path = kmcontroller.createAudioAndDownload(custom_instruction, source )
-
-        audio_path = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
-        
-        databasecon.execute("UPDATE entries SET audioPath = ? WHERE id = ?", (audio_path, chess_puzzle[0]))
-
-        convertToVideo.process(audio_path)
+        convertToVideo.process(chess_puzzle[1])
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)

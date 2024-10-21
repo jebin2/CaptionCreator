@@ -5,8 +5,29 @@ import kmcontroller
 from logger_config import setup_logging
 import requests
 import ollamaresponseparser
+import databasecon
+import custom_env
 
 logging = setup_logging()
+
+def getCustomInstruction(answer):
+    return f"""Start with "Hello everyone, Today's mystery"
+[State riddle - Host1 and Host2 alternate reading each sentence]
+Let's unlock this mystery...
+[Break down the clues by analyzing and thinking out loud]
+[gather insights]
+[Arrive at the answer] The answer is: {answer}
+There you go, [Quick one sentence explanation]
+"Thank you for listening"
+Rules:
+Never acknowledge listener
+Direct solving only
+Strictly follow sequence exactly
+1-2 minutes min-max time limit
+No extra commentary"""
+
+def getSource(riddle):
+    return riddle
 
 def get_prompt():
     try:
@@ -94,49 +115,15 @@ def get_ollama_output():
     
     return None
 
-def insertData(riddle_data):
-    try:
-        # Replace newline characters with spaces in the riddle
-        riddle_data['riddle'] = riddle_data['riddle'].replace("\n", " ")
-
-        conn = sqlite3.connect('ContentData/entries.db')
-        cursor = conn.cursor()
-        cursor.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer) VALUES (?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer']))
-
-        conn.commit()
-        conn.close()
-        logging.error(f"InsertData success: {riddle_data}")
-        return True
-    
-    except Exception as e:
-        logging.error(f"Error in insertData: {e}")
-    
-    return False
-
 def start():
     try:
         riddle_data = get_ollama_output()
         if riddle_data:
             logging.info("Riddle generation succeeded.")
-            custom_instruction = f"""Start with "Hello everyone, Today's mystery"
-[State riddle - Host1 and Host2 alternate reading each sentence]
-Let's unlock this mystery...
-[Break down the clues by analyzing and thinking out loud]
-[gather insights]
-[Arrive at the answer] The answer is: {riddle_data['answer']}
-There you go, [Quick one sentence explanation]
-"Thank you for listening"
-Rules:
-Never acknowledge listener
-Direct solving only
-Strictly follow sequence exactly
-1-2 minutes min-max time limit
-No extra commentary"""
-            riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(custom_instruction, riddle_data["riddle"])
-            if riddle_data['audio_path'] is None:
-                return False
-
-            return insertData(riddle_data)
+            # riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(riddle_data['answer']), getSource(riddle_data["riddle"]))
+            riddle_data['audio_path'] = f"{custom_env.AUDIO_PATH}/Untitled notebook.wav"
+            databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer'], 'text'))
+            return True
     
     except Exception as e:
         logging.error(f"An error occurred in start: {e}")

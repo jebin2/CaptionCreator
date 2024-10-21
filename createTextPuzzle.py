@@ -70,35 +70,10 @@ def start():
                 if when > 50:
                     return False
         
-        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {text_puzzle}")
 
-        custom_instruction = """Start with "Hello everyone!!, Today's Chess puzzle"
-[State board - Board position slowly]
-Let's get this going...
-[Break down the clues by analyzing and thinking out loud]
-[gather insights]
-[Arrive at the answer] The answer is [first move]
-There you go, [Explanation by playing the answer one by one]
-"Thank you for listening"
-Rules:
-Never acknowledge listener
-Direct solving only
-Strictly follow sequence exactly
-No extra commentary
-"""
-        source = f"""{text_puzzle[3]}
-**Answer**
-{text_puzzle[5]}
-
-"""
-        audio_path = kmcontroller.createAudioAndDownload(custom_instruction, source)
-
-        # audio_path = "/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook(34).wav"
-        
-        databasecon.execute("UPDATE entries SET audioPath = ? WHERE id = ?", (audio_path, text_puzzle[0]))
-
-        convertToVideo.process(audio_path)
+        convertToVideo.process(text_puzzle[1])
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)
@@ -106,5 +81,5 @@ No extra commentary
 
     return True
 
-# if __name__ == "__main__":
-#     start()
+if __name__ == "__main__":
+    start()

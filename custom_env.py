@@ -11,3 +11,4 @@ CHESS_BOARD_JPG = f'{CHESS_PATH}/chess_board.jpg'
 CHESS_BOARD_WITH_PUZZLE_SVG = f'{CHESS_PATH}/chess_board_with_puzzle.svg'
 CHESS_BOARD_WITH_PUZZLE_JPG = f'{CHESS_PATH}/chess_board_with_puzzle.jpg'
 CHESS_MOVES_PATH = f'{CHESS_PATH}/moves'
+FPS=24

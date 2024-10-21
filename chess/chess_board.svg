@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+    <g transform="translate(420, 0)">
+        <defs>
+            <linearGradient id="lightSquareGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FFFFFF"/>
+                <stop offset="100%" style="stop-color:#ECF0F1"/>
+            </linearGradient>
+        
+            <linearGradient id="darkSquareGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#3498DB"/>
+                <stop offset="100%" style="stop-color:#2980B9"/>
+            </linearGradient>
+
+            <filter id="squareShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceAlpha" stdDeviation="1"/>
+                <feOffset dx="1" dy="1"/>
+                <feComponentTransfer>
+                    <feFuncA type="linear" slope="0.2"/>
+                </feComponentTransfer>
+                <feMerge>
+                    <feMergeNode/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+        </defs>
+
+        <rect width="1080" height="1080" fill="url(#lightSquareGradient)"/>
+        
+        <!-- Dark squares with subtle shadow -->
+        <g filter="url(#squareShadow)">
+            <!-- Row 1 -->
+            <rect x="135" y="0" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="405" y="0" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="675" y="0" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="945" y="0" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 2 -->
+            <rect x="0" y="135" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="270" y="135" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="540" y="135" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="810" y="135" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 3 -->
+            <rect x="135" y="270" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="405" y="270" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="675" y="270" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="945" y="270" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 4 -->
+            <rect x="0" y="405" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="270" y="405" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="540" y="405" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="810" y="405" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 5 -->
+            <rect x="135" y="540" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="405" y="540" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="675" y="540" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="945" y="540" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 6 -->
+            <rect x="0" y="675" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="270" y="675" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="540" y="675" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="810" y="675" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 7 -->
+            <rect x="135" y="810" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="405" y="810" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="675" y="810" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="945" y="810" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            
+            <!-- Row 8 -->
+            <rect x="0" y="945" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="270" y="945" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="540" y="945" width="135" height="135" fill="url(#darkSquareGradient)"/>
+            <rect x="810" y="945" width="135" height="135" fill="url(#darkSquareGradient)"/>
+        </g>
+
+        <defs>
+            <!-- King - Abstract crown with geometric patterns -->
+            <symbol id="king" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">
+                    <g>
+                        <path d="M377.463,410.645c-0.333-0.398-33.05-40.237-50.234-86.893c-12.265-33.296-13.689-62.709-13.671-76.914h19.252
+                c3.375,0,6.492-2.102,8.194-5.024c1.692-2.922,1.702-6.672,0.028-9.604l-21.65-37.957c-0.791-1.387-1.912-2.548-3.221-3.364
+                l16.362-65.463c0.712-2.83,0.074-5.531-1.72-7.824c-1.794-2.303-4.55-3.346-7.463-3.346H190.759c-2.913,0-5.669,1.033-7.463,3.336
+                c-1.794,2.293-2.432,5.137-1.72,7.967l16.36,65.366c-1.309,0.816-2.428,1.903-3.218,3.288l-21.65,37.862
+                c-1.674,2.932-1.665,6.825,0.028,9.748c1.702,2.922,4.818,5.015,8.194,5.015h18.801c-0.534,14.205-2.943,48.301-13.484,76.914
+                c-14.483,39.314-50.918,86.9-51.279,87.372c-1.239,1.646-2.439,3.498-2.439,5.56v85.231c0,5.235,5.285,10.085,10.52,10.085
+                h227.282c5.234,0,8.42-4.851,8.42-10.085v-85.231C379.111,414.483,378.869,412.337,377.463,410.645z"/>
+                    </g>
+                    <g>
+                        <path d="M285.46,29.025h-19.99V9.47c0-5.234-4.236-9.47-9.47-9.47s-9.47,4.236-9.47,9.47v19.555h-17.89
+                            c-5.235,0-9.47,4.236-9.47,9.47c0,5.234,4.235,9.47,9.47,9.47h17.89v37.265c0,5.235,4.236,9.47,9.47,9.47s9.47-4.236,9.47-9.47
+                            V47.966h19.99c5.234,0,9.47-4.236,9.47-9.47C294.93,33.261,290.694,29.025,285.46,29.025z"/>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Queen - Flowing curves and points -->
+            <symbol id="queen" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">    
+                    <g>
+                        <path d="M317.141,40.157h-31.23V9.387c0-5.549-3.377-9.387-8.926-9.387h-50.196c-5.549,0-11.152,3.838-11.152,9.387v30.77h-29.005
+                            c-5.549,0-11.152,3.838-11.152,9.387V99.74c0,5.549,5.603,10.691,11.152,10.691h29.005v29.466c0,5.549,5.603,10.691,11.152,10.691
+                            h50.196c5.549,0,8.926-5.142,8.926-10.691v-29.466h31.23c5.549,0,8.926-5.142,8.926-10.691V49.544
+                            C326.067,43.995,322.69,40.157,317.141,40.157z"/>
+                    </g>
+                    <g>
+                        <path d="M390.048,431.196c29.245-30.615,87.174-97.963,86.029-152.044c-0.402-19.128-8.279-35.039-22.583-47.304
+                            c-31.598-27.078-64.681-28.432-97.309-4.696v-37.059c0-5.549-3.378-9.387-8.926-9.387H166.553c-5.549,0-11.152,3.838-11.152,9.387
+                            v38.147c-12.549-10.637-26.924-16.735-41.14-17.863c-19.137-1.608-37.909,5.696-56.301,21.471
+                            c-14.314,12.265-21.635,28.176-22.037,47.304c-1.147,54.189,56.253,121.701,85.444,152.23
+                            c-14.517,2.108-26.201,14.625-26.201,29.75v20.118c0,16.598,14.583,30.75,31.142,30.75h261.196
+                            c16.559,0,28.917-14.152,28.917-30.75v-20.118C416.421,445.586,405.156,432.758,390.048,431.196z"/>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Bishop - Dynamic triangular design -->
+            <symbol id="bishop" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">
+                    <g>
+                        <path d="M371.077,415.97c-0.311-0.377-31.309-38.123-47.589-82.328c-11.623-31.547-12.973-59.415-12.954-72.874h18.24
+                            c3.198,0,6.155-1.991,7.759-4.76c1.608-2.769,1.617-6.322,0.031-9.1l-20.508-35.963c-0.749-1.315-1.809-2.416-3.049-3.19
+                            l15.5-62.022c0.67-2.681,0.066-5.24-1.634-7.413c-1.7-2.182-4.307-3.17-7.071-3.17h-22.723
+                            c8.543-11.216,13.75-22.403,13.75-36.182c0-10.497-6.69-18.992-13.775-27.842c-5.065-6.326-10.3-12.938-13.949-20.953
+                            c-2.607-5.724-4.127-13.181-5.595-20.357C274.654,15.851,271.416,0,256.993,0c-16.477,0-19.146,16.094-21.288,29.036
+                            c-1.117,6.729-2.383,14.366-5.078,21.682c-2.594,7.045-8.53,14.727-13.77,21.509c-7.352,9.516-13.7,18.018-13.7,26.745
+                            c0,13.779,5.208,24.964,13.751,36.18h-22.724c-2.765,0-5.371,0.979-7.071,3.161c-1.7,2.173-2.304,4.867-1.634,7.549l15.502,61.932
+                            c-1.24,0.773-2.301,1.803-3.05,3.115l-20.508,35.873c-1.586,2.778-1.577,6.467,0.031,9.236c1.603,2.769,4.561,4.751,7.759,4.751
+                            h17.814c-0.503,13.459-2.784,45.763-12.775,72.874c-13.722,37.249-48.237,82.335-48.584,82.782
+                            c-1.174,1.56-2.311,3.314-2.311,5.268v80.753c0,4.96,5.011,9.555,9.966,9.555h215.342c4.955,0,7.979-4.596,7.979-9.555v-80.753
+                            C372.643,419.606,372.409,417.573,371.077,415.97z"/>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Knight - Geometric tower -->
+            <symbol id="knight" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">
+                    <g transform="scale(-1, 1) translate(-512, 0)">
+                        <g>
+                            <path d="M314.904,95.635c-15.994,0-29.005,13.011-29.005,29.005c0,15.994,13.011,29.005,29.005,29.005    c15.994,0,29.005-13.011,29.005-29.005C343.909,108.645,330.898,95.635,314.904,95.635z"/>
+                        </g>
+                        <g>
+                            <path d="M496.487,205.612c-13.228-16.532-33.594-36.889-55.149-58.444c-29.052-29.061-83.144-83.153-78.593-96.815    c7.138-21.404,19.573-22.367,19.837-22.396c4.636,0,8.62-3.286,9.498-7.837c0.869-4.551-1.605-9.083-5.91-10.811    c-2.096-0.831-50.919-19.988-92.538-0.812c-20.724-1.048-150.775-2.946-230.614,94.965    c-69.736,85.542-79.206,220.731-28.127,401.19c1.171,4.164,4.976,7.348,9.3,7.348h309.386c3.475,0,6.675-2.174,8.393-5.186    c1.728-3.021,1.699-6.878-0.066-9.871c-31.12-52.656-104.435-192.2-106.984-262.954c4.749,10.556,11.972,20.939,23.151,28.493    c17.042,11.528,39.778,13.889,67.537,7.072c6.496-0.661,72.135-6.29,96.362,34.101c2.596,4.315,8.063,5.925,12.614,3.668    c1.879-0.944,46.161-23.437,53.733-57.908C511.632,234.317,507.647,219.576,496.487,205.612z"/>
+                        </g>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Rook - Geometric tower -->
+            <symbol id="rook" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">    
+                    <g>
+                        <path d="M387.641,461.804h-7.978c-6.688-20.078-26.068-80.059-32.248-141.875c-7.456-74.579,4.799-147.319,4.922-148.044
+                            c0.505-2.922-0.309-5.669-2.216-7.934c-1.907-2.265-4.716-3.323-7.676-3.323H171.778c-2.941,0-5.735,0.968-7.642,3.204
+                            c-1.907,2.235-2.735,5.034-2.269,7.946c0.122,0.755,12.088,76.802,4.941,148.233c-5.929,59.289-25.598,121.716-32.31,141.794
+                            h-7.915c-13.829,0-26.19,10.603-26.19,24.446v15.059c0,5.549,5.607,10.691,11.151,10.691H402.68c5.544,0,8.928-5.142,8.928-10.691
+                            V486.25C411.608,472.407,401.469,461.804,387.641,461.804z"/>
+                    </g>
+                    <g>
+                        <path d="M402.68,0h-30.118c-5.544,0-11.151,3.838-11.151,9.387v40.809h-20.078V9.387c0-5.549-3.383-9.387-8.928-9.387H272.17
+                            c-5.544,0-11.151,3.838-11.151,9.387v40.809h-20.078V9.387c0-5.549-3.383-9.387-8.928-9.387h-50.196
+                            c-5.544,0-11.151,3.838-11.151,9.387v40.809h-20.078V9.387c0-5.549-3.383-9.387-8.928-9.387h-30.118
+                            c-5.544,0-11.151,3.838-11.151,9.387V99.74c0,5.549,5.607,10.691,11.151,10.691h18.967v19.426c0,5.549,5.607,10.691,11.151,10.691
+                            h230.902c5.544,0,8.928-5.142,8.928-10.691v-19.426h21.19c5.544,0,8.928-5.142,8.928-10.691V9.387
+                            C411.608,3.838,408.224,0,402.68,0z"/>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Pawn - Minimalist design -->
+            <symbol id="pawn" viewBox="0 0 512 512">
+                <g transform="scale(0.8) translate(50, 50)">
+                    <g>
+                        <path d="M425.353,492.617c-0.68-0.46-68.289-46.297-98.798-108.527c-23.04-46.967-14.425-109.916-9.8-143.737l0.52-3.484
+                            c1.587-11.697,4.167-21.493,7.29-31.722h43.948c5.647,0,10.228-4.575,10.228-10.228c0-5.654-4.581-10.228-10.228-10.228h-36.415
+                            c2.58-7.671,5.272-12.648,7.941-18.641c9.384-21.056,18.246-41.108,18.246-63.683C358.284,45.971,312.4,0,256,0
+                            c-56.403,0-102.284,45.846-102.284,102.242c0,29.776,9.619,50.785,19.801,72.69c1.45,3.116,2.905,4.645,4.349,9.759h-34.378
+                            c-5.649,0-10.228,4.575-10.228,10.228s4.58,10.228,10.228,10.228h42.785c3.468,10.228,6.466,19.855,8.495,32.031
+                            c10.473,62.909,7.327,112.308-9.365,147.168c-30.271,63.228-97.963,107.835-98.642,108.275c-3.792,2.477-5.509,7.441-4.22,11.777
+                            c1.292,4.335,5.278,7.602,9.804,7.602h327.309c4.498,0,8.474-3.279,9.782-7.584C430.75,500.111,429.094,495.124,425.353,492.617z"/>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- Piece gradients -->
+            <linearGradient id="whiteGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#FFFFFF"/>
+                <stop offset="100%" style="stop-color:#E0E0E0"/>
+            </linearGradient>
+            <linearGradient id="blackGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#2C3E50"/>
+                <stop offset="100%" style="stop-color:#1a252f"/>
+            </linearGradient>
+
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3.27" result="coloredBlur"/>
+                <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+            </filter>
+
+        </defs>
+
+        <!-- Place White Pieces -->
+        <g id="whitepieces" fill="url(#whiteGradient)" stroke="#000000" stroke-width="10" filter="url(#glow)">
+            <!-- Rooks -->
+            <use href="#rook" x="0" y="945" width="135" height="135"/>
+            <use href="#rook" x="945" y="945" width="135" height="135"/>
+            <!-- Knights -->
+            <use href="#knight" x="135" y="945" width="135" height="135" />
+            <use href="#knight" x="810" y="945" width="135" height="135" />
+            <!-- Bishops -->
+            <use href="#bishop" x="270" y="945" width="135" height="135"/>
+            <use href="#bishop" x="675" y="945" width="135" height="135"/>
+            <!-- Queen -->
+            <use href="#queen" x="405" y="945" width="135" height="135"/>
+            <!-- King -->
+            <use href="#king" x="540" y="945" width="135" height="135"/>
+            <!-- Pawns -->
+            <g transform="translate(0,810)">
+                <use href="#pawn" x="0" y="0" width="135" height="135"/>
+                <use href="#pawn" x="135" y="0" width="135" height="135"/>
+                <use href="#pawn" x="270" y="0" width="135" height="135"/>
+                <use href="#pawn" x="405" y="0" width="135" height="135"/>
+                <use href="#pawn" x="540" y="0" width="135" height="135"/>
+                <use href="#pawn" x="675" y="0" width="135" height="135"/>
+                <use href="#pawn" x="810" y="0" width="135" height="135"/>
+                <use href="#pawn" x="945" y="0" width="135" height="135"/>
+            </g>
+        </g>
+
+        <!-- Place Black Pieces -->
+        <g id="blackpieces" fill="url(#blackGradient)" stroke="#000000" stroke-width="10" filter="url(#glow)">
+            <!-- Rooks -->
+            <use href="#rook" x="0" y="0" width="135" height="135"/>
+            <use href="#rook" x="945" y="0" width="135" height="135"/>
+            <!-- Knights -->
+            <use href="#knight" x="135" y="0" width="135" height="135" />
+            <use href="#knight" x="810" y="0" width="135" height="135" />
+            <!-- Bishops -->
+            <use href="#bishop" x="270" y="0" width="135" height="135"/>
+            <use href="#bishop" x="675" y="0" width="135" height="135"/>
+            <!-- Queen -->
+            <use href="#queen" x="405" y="0" width="135" height="135"/>
+            <!-- King -->
+            <use href="#king" x="540" y="0" width="135" height="135"/>
+            <!-- Pawns -->
+            <g transform="translate(0,135)">
+                <use href="#pawn" x="0" y="0" width="135" height="135"/>
+                <use href="#pawn" x="135" y="0" width="135" height="135"/>
+                <use href="#pawn" x="270" y="0" width="135" height="135"/>
+                <use href="#pawn" x="405" y="0" width="135" height="135"/>
+                <use href="#pawn" x="540" y="0" width="135" height="135"/>
+                <use href="#pawn" x="675" y="0" width="135" height="135"/>
+                <use href="#pawn" x="810" y="0" width="135" height="135"/>
+                <use href="#pawn" x="945" y="0" width="135" height="135"/>
+            </g>
+        </g>
+
+        <rect x="0" y="0" width="1080" height="1080" fill="none" stroke="#2C3E50" stroke-width="10" filter="url(#squareShadow)"/>
+        <g font-family="Arial" font-size="40" text-anchor="middle" fill="#2C3E50" filter="url(#squareShadow)">
+            <!-- File labels (a-h) -->
+            <text x="117" y="1070">a</text>
+            <text x="252" y="1070">b</text>
+            <text x="387" y="1070">c</text>
+            <text x="522" y="1070">d</text>
+            <text x="657" y="1070">e</text>
+            <text x="792" y="1070">f</text>
+            <text x="927" y="1070">g</text>
+            <text x="1062" y="1070">h</text>
+            
+            <!-- Rank labels (1-8) -->
+            <text x="15" y="1062">1</text>
+            <text x="15" y="927">2</text>
+            <text x="15" y="792">3</text>
+            <text x="15" y="657">4</text>
+            <text x="15" y="522">5</text>
+            <text x="15" y="387">6</text>
+            <text x="15" y="252">7</text>
+            <text x="15" y="117">8</text>
+        </g>
+    </g>
+</svg>

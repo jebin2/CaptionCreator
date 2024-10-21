@@ -53,7 +53,7 @@ def convert_to_algebraic_notation(board_visual):
         "black_position": black
     }
 
-def stockfish_process(cmd, stockfish_path="/home/jebineinstein/temp/stockfish/stockfish-ubuntu-x86-64-avx2"):
+def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx2"):
     process = subprocess.Popen(
         [stockfish_path],
         stdin=subprocess.PIPE,
@@ -113,5 +113,5 @@ go
     }
 
 if __name__ == "__main__":
-    process("4k3/8/4K3/8/8/8/8/8 w - - 0 1")
-    # process("q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1")
+    # process("4k3/8/4K3/8/8/8/8/8 w - - 0 1")
+    process("q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1")

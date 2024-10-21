@@ -71,6 +71,9 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description):
     youtube = get_youtube_service()
 
     # Set the video details
+    final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
+    if 'Chess' in title:
+        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge"
     request_body = {
         'snippet': {
             'categoryId': '22',  # Category for "People & Blogs"

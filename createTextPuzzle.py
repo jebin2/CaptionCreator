@@ -80,6 +80,12 @@ def start():
             text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type != 'chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (text_puzzle[0],),  type='get')
         
         is_success = convertToVideo.process(text_puzzle[1])
+        
+        databasecon.execute("""
+                    UPDATE entries 
+                    SET audioPath = 'Done'
+                    WHERE id = ?
+                """, (text_puzzle[0]))
 
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)

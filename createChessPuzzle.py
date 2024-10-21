@@ -116,11 +116,17 @@ def start():
 
         is_success = convertToVideo.process(chess_puzzle[1])
 
+        databasecon.execute("""
+                    UPDATE entries 
+                    SET audioPath = 'Done'
+                    WHERE id = ?
+                """, (chess_puzzle[0]))
+
     except Exception as e:
         logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)
         return False
 
-    return True
+    return is_success
 
 # if __name__ == "__main__":
 #     start()

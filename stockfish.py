@@ -102,13 +102,12 @@ def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx
 def runInHostDef(fen):
     # Construct the command to run the script on the remote host
     ssh_command = f"ssh jebineinstein@172.28.156.132 'python3 /home/jebineinstein/git/CaptionCreator/stockfish.py \"{fen}\"'"
-
     try:
+        logging.info(f"Executing .. {ssh_command}")
         # Execute the command on the host
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Decode the output from bytes to string and parse JSON
         output = result.stdout.decode().strip()
-        print(f'Raw output From Host: {output}')
 
         start_index = output.index("{'chess_board")
         output = output[start_index:]
@@ -148,7 +147,7 @@ go
         "solution": moves
     }
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # ssh login
     # ssh-keygen -t rsa
     # ssh-copy-id username@remote_host_ip_or_domain
@@ -156,13 +155,13 @@ go
     # process("4k3/8/4K3/8/8/8/8/8 w - - 0 1")
 
     # Set up argument parsing
-    # parser = argparse.ArgumentParser(description="Process a chess position using Stockfish.")
-    # parser.add_argument("fen", type=str, help="FEN string representing the chess position.")
-    # parser.add_argument("--host", action="store_true", help="Run the command on a remote host.")
+    parser = argparse.ArgumentParser(description="Process a chess position using Stockfish.")
+    parser.add_argument("fen", type=str, help="FEN string representing the chess position.")
+    parser.add_argument("--host", action="store_true", help="Run the command on a remote host.")
 
-    # # Parse the arguments
-    # args = parser.parse_args()
+    # Parse the arguments
+    args = parser.parse_args()
 
-    # fen = args.fen if args.fen else "q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1"
-    # result = process(fen, stockfish_path='/home/jebineinstein/git/CaptionCreator/stockfish/stockfish-ubuntu-x86-64-avx2', runInHost=args.host)
-    # print(result)
+    fen = args.fen if args.fen else "q3r1nk/2RQ2n1/1r2Nbp1/1p3P2/1P4P1/Pb6/1B6/K3R3 w - - 0 1"
+    result = process(fen, stockfish_path='/home/jebineinstein/git/CaptionCreator/stockfish/stockfish-ubuntu-x86-64-avx2', runInHost=args.host)
+    print(result)

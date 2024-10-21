@@ -26,6 +26,6 @@ def fetchData(when=2):
     return None
 
 # Example usage
-# if __name__ == "__main__":
-#     # The given position
-#     fetchData()
+if __name__ == "__main__":
+    # The given position
+    fetchData(3)

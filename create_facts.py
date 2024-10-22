@@ -98,7 +98,7 @@ def start():
         facts = databasecon.execute("SELECT * FROM entries WHERE type = 'facts' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {facts}")
 
-        is_puzzle_shorts = len(databasecon.execute(f"SELECT * FROM entries WHERE id = '{facts[0]}' AND title = '{facts[2]}'")) > 0
+        is_puzzle_shorts = len(databasecon.execute(f"SELECT * FROM entries WHERE id = '{facts[0]}' AND title = '{facts[1]}'")) > 0
 
         autio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(is_puzzle_shorts), getSource(facts[3], facts[4]))
         

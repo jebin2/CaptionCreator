@@ -86,7 +86,7 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
     tags = ['riddle', 'thinking', 'fun', 'challenges']
     if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
+        final_des = f"{description}\n\n#chess #chesspuzzle #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
     
     if 'facts' == type:
         final_des = "#shorts #interesting"
@@ -141,11 +141,13 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     return video_id
 
 def process_entries_in_db(type):
+    logging.info("--------------------------------------")
     logging.info("Checking whether video upload in 12hrs")
+    logging.info("--------------------------------------")
     entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
         FROM entries 
-        WHERE uploadedToYoutube > {int(time.time() * 1000) - (12 *60 * 60 * 1000)} 
+        WHERE uploadedToYoutube > {int(time.time() * 1000) - (1 *60 * 60 * 1000)} 
         AND uploadedToYoutube < {int(time.time() * 1000)}
         AND type = '{type}'
     """, type='get')
@@ -207,8 +209,6 @@ def process_entries_in_db(type):
         databasecon.execute("UPDATE entries SET uploadedToYoutube = ?, youtubeVideoId = ? WHERE id = ?", (current_timestamp_ms, video_id, entry_id,))
         logging.info(f"Entry {entry_id} successfully updated in the database.")
 
-        common.remove_file(video_path)
-
         logging.info("Sleeping for 1 minute before next upload...")
 
 def monitor_database(interval=10):
@@ -236,4 +236,4 @@ def wait_with_logs(seconds):
 if __name__ == "__main__":
     # Monitor the database and check every 2.5 minutes
     logging.info("YouTube video uploader started. Monitoring the database.")
-    monitor_database(interval=150)
+    monitor_database(interval=10)

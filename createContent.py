@@ -6,7 +6,7 @@ import createChessPuzzle
 import create_facts
 import databasecon
 
-def createContent(interval=10):
+def createContent(interval=2):
     while True:
         logging.info("Starting for text puzzle to process...")
 

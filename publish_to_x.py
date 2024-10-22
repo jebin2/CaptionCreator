@@ -4,9 +4,10 @@ import json
 import sqlite3
 from requests_oauthlib import OAuth1Session
 import custom_env
-from logger_config import setup_logging
+import logger_config
+import common
 
-logging = setup_logging()
+logging = logger_config.setup_logging()
 
 # Load Twitter API credentials from xcredentials.json
 with open('xcredentials.json', 'r') as file:
@@ -90,7 +91,73 @@ def authenticate():
 
     return access_token, access_token_secret
 
-def post_to_x(title, thumbnail_path, description):
+def upload_image(oauth, image_path):
+    media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
+    with open(image_path, 'rb') as image_file:
+        response = oauth.post(media_upload_url, files={"media": image_file})
+
+    if response.status_code != 200:
+        logging.error("Image upload failed: %s %s", response.status_code, response.text)
+        return None
+
+    media_id = response.json()['media_id_string']
+    logging.info("Image uploaded successfully, media ID: %s", media_id)
+    return media_id
+
+
+def upload_video(oauth, video_path):
+    """Handles video upload to Twitter using chunked media upload."""
+    media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
+
+    # Step 1: INIT the upload
+    video_size = os.path.getsize(video_path)
+    init_data = {
+        "command": "INIT",
+        "media_type": "video/mp4",
+        "total_bytes": video_size,
+        "media_category": "tweet_video"
+    }
+    response = oauth.post(media_upload_url, data=init_data)
+    if response.status_code != 202:
+        logging.error("Video INIT failed: %s %s", response.status_code, response.text)
+        return None
+
+    media_id = response.json()['media_id_string']
+    logging.info("Video INIT successful, media ID: %s", media_id)
+
+    # Step 2: APPEND the video in chunks
+    with open(video_path, 'rb') as video_file:
+        segment_id = 0
+        while True:
+            chunk = video_file.read(4 * 1024 * 1024)  # Read 4MB at a time
+            if not chunk:
+                break
+            append_data = {
+                "command": "APPEND",
+                "media_id": media_id,
+                "segment_index": segment_id
+            }
+            files = {"media": chunk}
+            response = oauth.post(media_upload_url, data=append_data, files=files)
+            if response.status_code != 204:
+                logging.error("Video APPEND failed: %s %s", response.status_code, response.text)
+                return None
+            segment_id += 1
+
+    # Step 3: FINALIZE the upload
+    finalize_data = {
+        "command": "FINALIZE",
+        "media_id": media_id
+    }
+    response = oauth.post(media_upload_url, data=finalize_data)
+    if response.status_code != 201:
+        logging.error("Video FINALIZE failed: %s %s", response.status_code, response.text)
+        return None
+
+    logging.info("Video FINALIZE successful, media ID: %s", media_id)
+    return media_id
+
+def post_to_x(title, video_path, thumbnail_path, description, type):
     """Post to Twitter with the video title, an image, and reply with the description."""
     
     logging.info("Starting post to Twitter for title: %s", title)
@@ -104,25 +171,22 @@ def post_to_x(title, thumbnail_path, description):
         resource_owner_secret=access_token_secret,
     )
 
-    if os.path.exists(thumbnail_path) and os.path.isfile(thumbnail_path):
-        logging.info("Uploading media from: %s", thumbnail_path)
-        with open(thumbnail_path, 'rb') as image_file:
-            media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
-            response = oauth.post(media_upload_url, files={"media": image_file})
+    media_id = None
+    if type == 'facts':
+        if os.path.exists(video_path) and os.path.isfile(video_path):
+            logging.info("Uploading media from: %s", video_path)
+            media_id = upload_video(oauth, thumbnail_path)
+    else:
+        if os.path.exists(thumbnail_path) and os.path.isfile(thumbnail_path):
+            logging.info("Uploading image from: %s", thumbnail_path)
+            media_id = upload_image(oauth, thumbnail_path)
 
-        if response.status_code != 200:
-            logging.error("Media upload failed: %s %s", response.status_code, response.text)
-            raise Exception("Media upload failed: {} {}".format(response.status_code, response.text))
-
-        media_id = response.json()['media_id_string']
-        logging.info("Media uploaded successfully, media ID: %s", media_id)
-
+    if media_id:
         tweet_payload = {
             "text": title,
             "media": {"media_ids": [media_id]}  # Include the media ID
         }
     else:
-        logging.warning("Thumbnail not found, posting tweet without media.")
         tweet_payload = {
             "text": title
         }
@@ -187,7 +251,7 @@ def process_entries_in_db():
     # Query for entries where generatedThumbnailPath are not null
     logging.info("Fetching entries ready for Twitter posting.")
     cursor.execute(""" 
-        SELECT id, title, description, generatedThumbnailPath, youtubeVideoId 
+        SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, youtubeVideoId, type 
         FROM entries 
         WHERE generatedThumbnailPath IS NOT NULL 
         AND (uploadedToX = 0 OR uploadedToX IS NULL)
@@ -200,12 +264,12 @@ def process_entries_in_db():
 
     # Post to X (after all uploads are complete)
     for entry in entries:
-        entry_id, title, description, thumbnail_path, youtubeVideoId = entry
+        entry_id, title, description, video_path, thumbnail_path, youtubeVideoId, type = entry
         logging.info("Processing entry ID: %d for posting to Twitter.", entry_id)
 
         # Post to X
         youtube_link = f" https://www.youtube.com/watch?v={youtubeVideoId}" if youtubeVideoId else ""
-        tweet_id = post_to_x(title, thumbnail_path, str(description + youtube_link))
+        tweet_id = post_to_x(title, video_path, thumbnail_path, str(description + youtube_link), type)
 
         # Mark the entry as posted to X
         logging.info("Marking entry ID: %d as posted to Twitter with tweet ID: %s", entry_id, tweet_id)
@@ -214,7 +278,9 @@ def process_entries_in_db():
         db.commit()
 
         logging.info("Sleeping for 1 minute before processing the next entry.")
-        wait_with_logs(60)  # 1 minute
+        logger_config.wait_with_logs(60)  # 1 minute
+        common.remove_file(thumbnail_path)
+        common.remove_file(video_path)
 
     logging.info("Closing the database connection.")
     db.close()
@@ -226,20 +292,4 @@ def monitor_database(interval=10):
         logging.info("Checking database for new entries.")
         process_entries_in_db()
         logging.info("Sleeping for %d seconds before next check.", interval)
-        wait_with_logs(interval)
-
-def wait_with_logs(seconds):
-    """Wait for a specified number of seconds, logging the countdown."""
-    try:
-        logging.info(f"Waiting for {seconds} seconds.")
-        for i in range(seconds, 0, -1):
-            logging.info(f"Wait time remaining: {i} seconds.")
-            time.sleep(1)
-        logging.info("Wait period finished.")
-    except Exception as e:
-        logging.error(f"Error during wait: {str(e)}")
-
-if __name__ == "__main__":
-    logging.info("Twitter video uploader started. Monitoring the database.")
-    # Monitor the database and check every 2.5 minutes
-    monitor_database(interval=150)
+        logger_config.wait_with_logs(interval)

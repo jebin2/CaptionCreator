@@ -286,11 +286,18 @@ def process_entries_in_db():
     logging.info("Closing the database connection.")
     db.close()
 
-def monitor_database(interval=10):
-    """Periodically check the database for new videos to upload."""
-    logging.info("Starting database monitor with an interval of %d seconds.", interval)
-    while True:
-        logging.info("Checking database for new entries.")
-        process_entries_in_db()
-        logging.info("Sleeping for %d seconds before next check.", interval)
-        logger_config.wait_with_logs(interval)
+def start(interval=10):
+    try:
+        logging.info("Starting database monitor with an interval of %d seconds.", interval)
+        while True:
+            logging.info("Checking database for new entries.")
+            process_entries_in_db()
+            logging.info("Sleeping for %d seconds before next check.", interval)
+            logger_config.wait_with_logs(interval)
+            if interval == 0:
+                break
+    except Exception as e:
+        logging.error(f"Error in publish to X:: {str(e)}", exc_info=True)
+        return False
+
+    return True

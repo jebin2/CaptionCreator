@@ -11,9 +11,9 @@ import custom_env
 import databasecon
 import common
 
-from logger_config import setup_logging
+import logger_config
 
-logging = setup_logging()
+logging = logger_config.setup_logging()
 
 SCOPES = [
     'https://www.googleapis.com/auth/youtube.upload',
@@ -212,29 +212,25 @@ def process_entries_in_db(type):
 
         logging.info("Sleeping for 1 minute before next upload...")
 
-def monitor_database(interval=10):
-    """Periodically check the database for new videos to upload."""
-    logging.info(f"Starting database monitor with an interval of {interval} seconds.")
-    while True:
-        logging.info("Checking the database for new entries.")
-        process_entries_in_db('text')
-        process_entries_in_db('chess')
-        process_entries_in_db('facts')
-        logging.info(f"Sleeping for {interval} seconds before next check.")
-        wait_with_logs(interval)
-
-def wait_with_logs(seconds):
-    """Wait for a specified number of seconds, logging the countdown."""
+def start(interval=10):
     try:
-        logging.info(f"Waiting for {seconds} seconds.")
-        for i in range(seconds, 0, -1):
-            logging.info(f"Wait time remaining: {i} seconds.")
-            time.sleep(1)
-        logging.info("Wait period finished.")
+        logging.info(f"Starting database monitor with an interval of {interval} seconds.")
+        while True:
+            logging.info("Checking the database for new entries.")
+            process_entries_in_db('text')
+            process_entries_in_db('chess')
+            process_entries_in_db('facts')
+            logging.info(f"Sleeping for {interval} seconds before next check.")
+            logger_config.wait_with_logs(interval)
+            if interval == 0:
+                break 
     except Exception as e:
-        logging.error(f"Error during wait: {str(e)}")
+        logging.error(f"Error in publish to yt:: {str(e)}", exc_info=True)
+        return False
 
-if __name__ == "__main__":
-    # Monitor the database and check every 2.5 minutes
-    logging.info("YouTube video uploader started. Monitoring the database.")
-    monitor_database(interval=10)
+    return True
+
+# if __name__ == "__main__":
+#     # Monitor the database and check every 2.5 minutes
+#     logging.info("YouTube video uploader started. Monitoring the database.")
+#     start(interval=10)

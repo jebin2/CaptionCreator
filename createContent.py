@@ -6,6 +6,8 @@ import createChessPuzzle
 import create_facts
 import databasecon
 import gc
+import publish_to_yt
+import publish_to_x
 
 def createContent(interval=2):
     while True:
@@ -78,6 +80,10 @@ def createContent(interval=2):
         
         else:
             logging.warning("Skipping Chess puzzle creation as it reached limit...")
+
+        publish_to_yt.start(0)
+
+        publish_to_x.start(0)
 
         logger_config.wait_with_logs(interval, "for next content to create...")    
 

@@ -33,16 +33,9 @@ def getSource(riddle):
 
 def get_prompt():
     try:
-        oldAnswers = ''
-        conn = sqlite3.connect('ContentData/entries.db')
-        cursor = conn.cursor()
-        cursor.execute("SELECT answer FROM entries where type = 'text'")
-        result = cursor.fetchall()
+        result = databasecon.execute("SELECT answer FROM entries where type = 'text'")
         for (answer,) in result:
             oldAnswers += answer + ","
-        
-        # Close the connection
-        conn.close()
 
         prompt = f"""You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
 The answer should NOT be any of these: {oldAnswers}

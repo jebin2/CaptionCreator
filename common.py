@@ -7,7 +7,11 @@ import random
 from datetime import datetime, timedelta
 
 def file_exists(file_path):
-    return Path(file_path).is_file()
+    try:
+        return Path(file_path).is_file()
+    except:
+        pass
+    return False
 
 def list_files_recursive(directory):
     # Initialize an empty array to store the file paths

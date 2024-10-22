@@ -6,6 +6,7 @@ from requests_oauthlib import OAuth1Session
 import custom_env
 import logger_config
 import common
+import databasecon
 
 logging = logger_config.setup_logging()
 
@@ -250,7 +251,7 @@ def process_entries_in_db():
 
     # Query for entries where generatedThumbnailPath are not null
     logging.info("Fetching entries ready for Twitter posting.")
-    cursor.execute(""" 
+    databasecon.execute(""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, youtubeVideoId, type 
         FROM entries 
         WHERE generatedThumbnailPath IS NOT NULL 
@@ -274,7 +275,7 @@ def process_entries_in_db():
         # Mark the entry as posted to X
         logging.info("Marking entry ID: %d as posted to Twitter with tweet ID: %s", entry_id, tweet_id)
         current_timestamp_ms = int(time.time() * 1000)
-        cursor.execute("UPDATE entries SET uploadedToX = ?, tweetId = ? WHERE id = ?", (current_timestamp_ms, tweet_id, entry_id,))
+        databasecon.execute("UPDATE entries SET uploadedToX = ?, tweetId = ? WHERE id = ?", (current_timestamp_ms, tweet_id, entry_id,))
         db.commit()
 
         logging.info("Sleeping for 1 minute before processing the next entry.")

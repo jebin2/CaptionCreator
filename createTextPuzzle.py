@@ -8,6 +8,8 @@ import convertToVideo
 import create_riddles
 import common
 
+START_WITH = 'Hello everyone'
+
 def format_moves(moves):
     formatted_moves = "The answer is "
     for move in moves.values():
@@ -53,7 +55,7 @@ def start():
             })
             text_puzzle = databasecon.execute("SELECT * FROM entries WHERE id = ? AND type = 'text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", (text_puzzle[0],),  type='get')
         
-        is_success = convertToVideo.process(text_puzzle[0], text_puzzle[1])
+        is_success = convertToVideo.process(text_puzzle[0], text_puzzle[1], START_WITH)
         
         if is_success:
             databasecon.execute("""

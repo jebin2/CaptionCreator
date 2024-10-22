@@ -14,7 +14,7 @@ START_WITH = 'Hello everyone'
 
 def getCustomInstruction(answer, riddle_shorts = False):
     if riddle_shorts:
-        return f"""Start with 'Hello everyone... Today's mystery'
+        return f"""Start with '{START_WITH}... Today's mystery'
 [State riddle - Host1 and Host2 alternate reading each sentence]
 ... ...
 End with 'Check the description to unlock this mystery...'

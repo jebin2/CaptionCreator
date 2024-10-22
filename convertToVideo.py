@@ -212,8 +212,9 @@ def process(id, audio_path=None, startWith = None):
         logging.error("No transcript generated. Cannot create video.")
         return False
     
-    if startWith and not transcript.startswith(startWith):
-        logging.error(f"Generated transcript from NotebookLLM is not correct. Try again... {transcript}")
+    if startWith and not transcript.strip().startswith(startWith):
+        logging.error(f"Generated transcript from NotebookLLM is not correct. Try again... {transcript} ::: {startWith}")
+        logging.error(f"index:: {transcript.index(startWith)}")
         return False
 
     result = databasecon.execute("SELECT thumbnailText, description, answer, type FROM entries WHERE id = ?", (id,), type='get')

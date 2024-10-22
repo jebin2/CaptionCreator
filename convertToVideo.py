@@ -353,7 +353,7 @@ def process(id, audio_path=None, startWith = None):
             background.save(thumbnail_path)
         else:
             create_text_image(
-                "", 
+                '' if type == 'facts' else thumbnailText, 
                 background_path,
                 thumbnail_path,
                 font_path,

@@ -5,7 +5,7 @@ import subprocess
 import json
 import argparse
 
-def parse_moves(pv_line):
+def parse_moves(is_white, pv_line):
     """Parse principal variation line into moves dictionary"""
     moves_part = pv_line.split(' pv ')[1].strip()
     moves = moves_part.split()
@@ -15,18 +15,30 @@ def parse_moves(pv_line):
     
     for i in range(0, len(moves)-1, 2):
         if i + 1 < len(moves):
-            result[f"move{move_count}"] = {
-                "white": moves[i],
-                "black": moves[i+1]
-            }
+            if is_white:
+                result[f"move{move_count}"] = {
+                    "white": moves[i],
+                    "black": moves[i+1]
+                }
+            else:
+                result[f"move{move_count}"] = {
+                    "black": moves[i],
+                    "white": moves[i+1]
+                }
             move_count += 1
     
     # Handle last move if it's a single move
     if len(moves) % 2 == 1:
-        result[f"move{move_count}"] = {
-            "white": moves[-1],
-            "black": None
-        }
+        if is_white:
+            result[f"move{move_count}"] = {
+                "white": moves[-1],
+                "black": None
+            }
+        else:
+            result[f"move{move_count}"] = {
+                "black": moves[-1],
+                "white": None
+            }
     
     return result
 
@@ -54,7 +66,7 @@ def convert_to_algebraic_notation(board_visual):
         "black_position": black
     }
 
-def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx2"):
+def stockfish_process(is_white, cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx2"):
     process = subprocess.Popen(
         [stockfish_path],
         stdin=subprocess.PIPE,
@@ -91,7 +103,7 @@ def stockfish_process(cmd, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx
 
     if board_visual and moves:
         board_visual = convert_to_algebraic_notation(board_visual)
-        moves = parse_moves(moves)
+        moves = parse_moves(is_white, moves)
 
     logging.info(f"chess_board: {board_visual}")
     logging.info(f"solution: {moves}")
@@ -137,7 +149,7 @@ def process(fen, stockfish_path="stockfish/stockfish-ubuntu-x86-64-avx2", runInH
     if runInHost:
         return runInHostDef(fen)
     else:
-        board_visual, moves = stockfish_process(f"""position fen {fen}
+        board_visual, moves = stockfish_process(True if ' w ' in fen else False, f"""position fen {fen}
 d
 go
 """, stockfish_path)

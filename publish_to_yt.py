@@ -9,6 +9,7 @@ from googleapiclient.http import MediaFileUpload
 from google.auth.transport.requests import Request
 import custom_env
 import databasecon
+import common
 
 from logger_config import setup_logging
 
@@ -138,7 +139,6 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     return video_id
 
 def process_entries_in_db(type):
-    
     logging.info("Checking whether video upload in 12hrs")
     entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
@@ -155,14 +155,33 @@ def process_entries_in_db(type):
 
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null
     logging.info("Fetching entries with videos and thumbnails ready for upload...")
-    entries = databasecon.execute(f""" 
-        SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
-        FROM entries 
-        WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
-        AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
-        AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
-        AND type = '{type}'
-    """)
+    is_data_avail = False
+    entries = None
+    date_count = 0
+    while not is_data_avail:
+        date_contains = common.get_date(date_count)
+        date_filter = f"AND title LIKE '%{date_contains}%'" if type == 'chess' else ''
+        entries = databasecon.execute(f""" 
+            SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+            FROM entries 
+            WHERE (generatedVideoPath IS NOT NULL AND generatedVideoPath != '') 
+            AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
+            AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
+            AND type = '{type}'
+            {date_filter}
+            limit 1
+        """)
+        date_count += 1
+        is_data_avail = len(entries) > 0 or date_count > 50
+
+        if len(entries) > 0 and type == 'text':
+            title = entries[0][1]
+            logging.info(f"Checking facts for title {title} entries to process.")
+            entries = databasecon.execute(f""" 
+                SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+                FROM entries 
+                WHERE title = ?
+            """, (title,))
 
     logging.info(f"Found {len(entries)} entries to process.")
     
@@ -184,8 +203,9 @@ def process_entries_in_db(type):
         databasecon.execute("UPDATE entries SET uploadedToYoutube = ?, youtubeVideoId = ? WHERE id = ?", (current_timestamp_ms, video_id, entry_id,))
         logging.info(f"Entry {entry_id} successfully updated in the database.")
 
+        common.remove_file(video_path)
+
         logging.info("Sleeping for 1 minute before next upload...")
-        break
 
 def monitor_database(interval=10):
     """Periodically check the database for new videos to upload."""

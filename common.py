@@ -4,6 +4,7 @@ import subprocess
 import shutil
 import string
 import random
+from datetime import datetime, timedelta
 
 def file_exists(file_path):
     return Path(file_path).is_file()
@@ -65,3 +66,10 @@ def generate_random_string(length=6):
     # Generate a random string
     random_string = ''.join(random.choice(characters) for _ in range(length))
     return random_string
+
+def get_date(when=0):
+    today = datetime.now()
+    sub_day = today - timedelta(days=when)
+
+    sub_day_str = sub_day.strftime('%Y-%m-%d')    
+    return sub_day_str

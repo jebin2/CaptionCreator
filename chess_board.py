@@ -96,6 +96,7 @@ def get_piece_from_coordinates(tree: etree._ElementTree, is_white: bool, notatio
             if notation in child.get('_id', ''):
                 return ID_TO_PIECE.get(child.get('href'))
 
+    logging.error(f"none returned: {notation}")
     return None
 
 def empty_element(element):
@@ -227,6 +228,7 @@ def make(data) -> Optional[str]:
 
         # data = {'chess_board': {'white_position': ['Qe6', 'Nd5', 'Pg4', 'Pa3', 'Pf3', 'Bf1', 'Kg1'], 'black_position': ['bb8', 're8', 'rh8', 'pb7', 'kh7', 'pa6', 'pc5', 'pd4', 'ph3', 'qd1']}, 'solution': {'move1': {'white': 'e6f7', 'black': 'h7h6'}, 'move2': {'white': 'g4g5', 'black': 'h6g5'}, 'move3': {'white': 'f7g7', 'black': 'g5h5'}, 'move4': {'white': 'd5f6', 'black': 'h5h4'}, 'move5': {'white': 'g7g4', 'black': None}}, 'fen': '1b2r2r/1p5k/p3Q3/2pN4/3p2P1/P4P1p/8/3q1BK1 w - - 0 1', 'date': '2024-10-19', 'whose_turn': 'White'}
 
+        # data = {"chess_board": {"white_position": ["Bh6", "Qa4", "Bc4", "Ne4", "Nc3", "Pd3", "Pg3", "Pb2", "Pc2", "Pf2", "Pg2", "Ra1", "Re1", "Kg1"], "black_position": ["ka8", "bc8", "rh8", "pb7", "pf7", "pg7", "pa6", "qc6", "pc5", "ne5", "rh5"]}, "solution": {"move1": {"white": "h5h1", "black": "g1h1"}, "move2": {"white": "c6h6", "black": "h1g1"}, "move3": {"white": "h6h1", "black": None}}, "fen": "k1b4r/1p3pp1/p1q4B/2p1n2r/Q1B1N3/2NP2P1/1PP2PP1/R3R1K1 b - - 0 1", "date": "2024-10-16", "whose_turn": "Black"}
         
         white_pieces = data["chess_board"]["white_position"]
         black_pieces = data["chess_board"]["black_position"]

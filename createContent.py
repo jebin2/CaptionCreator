@@ -4,41 +4,78 @@ logging = logger_config.setup_logging()
 import createTextPuzzle
 import createChessPuzzle
 import create_facts
+import databasecon
 
 def createContent(interval=10):
     while True:
         logging.info("Starting for text puzzle to process...")
 
-        is_success = createTextPuzzle.start()
-        if is_success:
-            logging.info("End")
-        else:
-            logging.error("Unable to create text puzzle. please check now...")
-            logging.error("Unable to create text puzzle. please check now...")
-            logging.error("Unable to create text puzzle. please check now...")
-            logging.error("Unable to create text puzzle. please check now...")
+        textEntries = databasecon.execute(f""" 
+            SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+            FROM entries
+            WHERE (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
+            AND type = 'text'
+        """)
+        TEXT_PUZZLE = len(textEntries)
 
-        logging.info("Starting for chess puzzle to process...")
+        chessEntries = databasecon.execute(f""" 
+            SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+            FROM entries
+            WHERE (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
+            AND type = 'text'
+        """)
+        CHESS_PUZZLE = len(chessEntries)
+
+        factsEntries = databasecon.execute(f""" 
+            SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+            FROM entries
+            WHERE (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
+            AND type = 'text'
+        """)
+        FACTS = len(factsEntries) - 1
         
-        is_success = createChessPuzzle.start()
-        if is_success:
-            logging.info("End")
-        else:
-            logging.error("Unable to create chess puzzle. please check now...")
-            logging.error("Unable to create chess puzzle. please check now...")
-            logging.error("Unable to create chess puzzle. please check now...")
-            logging.error("Unable to create chess puzzle. please check now...")
+        if (TEXT_PUZZLE <= 2 * CHESS_PUZZLE or FACTS <= 2 * CHESS_PUZZLE) and TEXT_PUZZLE == FACTS:
+            is_success = createTextPuzzle.start()
+            if is_success:
+                logging.info("End")
+            else:
+                logging.error("Unable to create text puzzle. please check now...")
+                logging.error("Unable to create text puzzle. please check now...")
+                logging.error("Unable to create text puzzle. please check now...")
+                logging.error("Unable to create text puzzle. please check now...")
 
-        logger_config.wait_with_logs(interval, "for next content to create...")   
-
-        is_success = create_facts.start()
-        if is_success:
-            logging.info("End")
+            logging.info("Starting for chess puzzle to process...")
+        
         else:
-            logging.error("Unable to create facts. please check now...")
-            logging.error("Unable to create facts. please check now...")
-            logging.error("Unable to create facts. please check now...")
-            logging.error("Unable to create facts. please check now...")
+            logging.info("Skipping Text Puzzle creation as it reached limit...")
+        
+        if FACTS <= 2 * CHESS_PUZZLE and TEXT_PUZZLE <= FACTS:
+            is_success = createChessPuzzle.start()
+            if is_success:
+                logging.info("End")
+            else:
+                logging.error("Unable to create chess puzzle. please check now...")
+                logging.error("Unable to create chess puzzle. please check now...")
+                logging.error("Unable to create chess puzzle. please check now...")
+                logging.error("Unable to create chess puzzle. please check now...")
+
+            logger_config.wait_with_logs(interval, "for next content to create...")   
+        
+        else:
+            logging.info("Skipping Chess puzzle creation as it reached limit...")
+
+        if TEXT_PUZZLE > 2 * CHESS_PUZZLE:
+            is_success = create_facts.start()
+            if is_success:
+                logging.info("End")
+            else:
+                logging.error("Unable to create facts. please check now...")
+                logging.error("Unable to create facts. please check now...")
+                logging.error("Unable to create facts. please check now...")
+                logging.error("Unable to create facts. please check now...")
+                
+        else:
+            logging.info("Skipping Chess chess creation as it reached limit...")
 
         logger_config.wait_with_logs(interval, "for next content to create...")    
 

@@ -28,32 +28,6 @@ def format_moves(moves):
     # Join all moves with a comma and return
     return formatted_moves
 
-def fetchAndUpdate(when):
-    data = chess_puzzle.fetchData(when)
-    if data is None:
-        return False
-
-    date = data['date']
-    white = ' '.join(data['chess_board']['white_position'])
-    black = ' '.join(data['chess_board']['black_position'])
-    turn = data['whose_turn']
-    fen = data['fen']
-    description = f"""**Position:**\n
-White's position: {white}\n
-Black's position: {black}\n
-
-**The Situation:**\n
-It's {turn}'s turn.\n
-"""
-    result = databasecon.execute(f"SELECT * FROM entries WHERE type='chess' AND chess_fen = '{fen}'", type='get')
-    if result:
-        return False
-
-    answer = format_moves(data['solution'])
-    databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, type, answer, chess_meta, chess_fen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", ('--', f'How to solve Chess.com daily puzzle : {date}', description, 'Check my video for solution', 'chess', answer, json.dumps(data), fen))
-
-    return True
-
 def start():
     try:
         text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type ='text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')

@@ -8,15 +8,17 @@ import json
 import kmcontroller
 import convertToVideo
 
+START_WITH = 'Did you know'
+
 def getCustomInstruction():
-    return f"""Start with 'Did you know...'
+    return f"""Start with '{START_WITH}...'
 [Present each fact with engaging tone and short unexpected connections]
 [Add a single wow/amazing/incredible reaction]
 'Thank you for listening!'
 Rules:
 No acknowledging audience directly
 Present facts sequentially without deviation
-No additional commentary or explanations
+No additional commentary or intro
 Keep reactions short and impactful
 Strictly follow sequence exactly"""
 
@@ -84,7 +86,7 @@ def start():
         
         autio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(), getSource(facts[3], facts[4]))
         
-        is_success = convertToVideo.process(facts[0], autio_path)
+        is_success = convertToVideo.process(facts[0], autio_path, START_WITH)
         
         if is_success:
             databasecon.execute("""

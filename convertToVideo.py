@@ -203,13 +203,17 @@ def resize_thumbnail(thumbnail_path):
         logging.error(f"Error resizing thumbnail: {str(e)}", exc_info=True)
         return thumbnail_path
 
-def process(id, audio_path=None):
+def process(id, audio_path=None, startWith = None):
     logging.info(f"Processing audio:: {audio_path}")
     if common.file_exists(audio_path) is False:
         return False
     transcript, segments = retrieveText.parse(audio_path)
     if not transcript:
         logging.error("No transcript generated. Cannot create video.")
+        return False
+    
+    if startWith and not transcript.startswith(startWith):
+        logging.error(f"Generated transcript from NotebookLLM is not correct. Try again... {transcript}")
         return False
 
     result = databasecon.execute("SELECT thumbnailText, description, answer, type FROM entries WHERE id = ?", (id,), type='get')
@@ -233,7 +237,7 @@ def process(id, audio_path=None):
     background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT, type)
     audio = AudioFileClip(audio_path)
 
-    if audio.duration > 60 and type == 'facts':
+    if audio.duration > 30 and type == 'facts':
         logging.error(f"facts cannot be more than 60 sec: {audio.duration}")
         return False
 

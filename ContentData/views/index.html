@@ -155,7 +155,6 @@
 
 #entriesTable th,
 #entriesTable td {
-    word-break: break-all;
     padding: 8px; /* Add some padding */
     text-align: left; /* Align text to the left */
     border: 1px solid #ddd; /* Border for table cells */
@@ -227,6 +226,7 @@
                 <th>Uploaded to X</th>
                 <th>YouTube Video ID</th>
                 <th>Tweet ID</th>
+                <th>Type</th>
             </tr>
         </thead>
         <tbody id="entriesBody"></tbody>
@@ -277,7 +277,8 @@
                     <td>${entry.uploadedToYoutube ? '✔️' : '❌'}</td>
                     <td>${entry.uploadedToX ? '✔️' : '❌'}</td>
                     <td>${entry.youtubeVideoId || ''}</td>
-                    <td>${entry.tweetId || ''}</td>`;
+                    <td>${entry.tweetId || ''}</td>
+                    <td>${entry.type || ''}</td>`;
                 entriesBody.appendChild(row);
             });
         }

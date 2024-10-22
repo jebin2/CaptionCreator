@@ -9,8 +9,24 @@ import databasecon
 
 logging = setup_logging()
 
-def getCustomInstruction(answer):
-    return f"""Start with "Hello everyone, Today's mystery"
+
+START_WITH = 'Hello everyone'
+
+def getCustomInstruction(answer, riddle_shorts = False):
+    if riddle_shorts:
+        return f"""Start with 'Hello everyone... Today's mystery'
+[State riddle - Host1 and Host2 alternate reading each sentence]
+... ...
+End with 'Check the description to unlock this mystery...'
+Rules:
+Never acknowledge listener
+Direct reading given source only
+Strictly follow sequence exactly
+keep it very short
+No extra commentary
+"""
+    else:
+        return f"""Start with "{START_WITH}, Today's mystery"
 [State riddle - Host1 and Host2 alternate reading each sentence]
 Let's unlock this mystery...
 [Break down the clues by analyzing and thinking out loud]
@@ -33,7 +49,7 @@ def get_prompt():
         oldAnswers = ''
         conn = sqlite3.connect('ContentData/entries.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT answer FROM entries")
+        cursor.execute("SELECT answer FROM entries where type = 'text'")
         result = cursor.fetchall()
         for (answer,) in result:
             oldAnswers += answer + ","
@@ -41,16 +57,6 @@ def get_prompt():
         # Close the connection
         conn.close()
 
-        prompt = f"""
-            Create a unique, original Enigmas riddle that has not been used before. The answer should NOT be any of these: {oldAnswers}
-
-            Its mandatory to format your response as JSON Object:
-            {{
-                "title": <SEO optimised title for the riddle to upload in youtube>
-                "riddle": <your new riddle>,
-                "answer": <the solution>
-            }}
-        """
         prompt = f"""You are a master riddle creator. Create ONE unique, clever, and engaging riddle following these exact specifications:
 The answer should NOT be any of these: {oldAnswers}
 FORMAT: Return ONLY this exact JSON structure:
@@ -132,6 +138,10 @@ def start(riddle_data=None):
                 """, (riddle_data['audio_path'], riddle_data['id']))
             else:
                 databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer'], 'text'))
+
+                riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(None, True), getSource(riddle_data["riddle"]))
+                
+                databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], '', riddle_data['answer'], 'facts'))
 
             return True
     

@@ -16,6 +16,9 @@ type Entry = {
 	uploadedToX: number;
 	youtubeVideoId: string;
 	tweetId: string;
+	type: string;
+	chess_meta: string;
+	chess_fen: string;
 };
 
 // Logging function for structured logs
@@ -43,7 +46,10 @@ async function initDatabase(alter = false) {
 				uploadedToYoutube INTEGER,
 				uploadedToX INTEGER,
 				youtubeVideoId TEXT,
-				tweetId TEXT
+				tweetId TEXT,
+				type TEXT,
+				chess_meta TEXT,
+				chess_fen TEXT
 			)`);
 
 		log("Database initialized.");
@@ -168,7 +174,7 @@ serve({
 			else if (req.method === "GET" && pathname === "/entries") {
 				log("Fetching all entries...");
 				const db = await dbPromise;
-				const entries: Entry[] = await db.all("SELECT * FROM entries");
+				const entries: Entry[] = await db.all("SELECT * FROM entries ORDER BY CASE WHEN uploadedToYoutube IS NULL OR uploadedToYoutube = '' THEN 0 ELSE 1 END, uploadedToYoutube DESC, id DESC");
 				log(`Fetched ${entries.length} entries.`);
 				return new Response(JSON.stringify(entries), {
 					headers: { "Content-Type": "application/json", ...corsHeaders },

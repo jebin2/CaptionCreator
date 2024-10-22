@@ -9,8 +9,10 @@ import kmcontroller
 import json
 import convertToVideo
 
+START_WITH = 'Hello everyone'
+
 def getCustomInstruction():
-    return """Start with "Hello everyone!!, Today's Chess puzzle"
+    return f"""Start with "{START_WITH}!!, Today's Chess puzzle"
 [State board - Board position slowly]
 Let's get this going...
 [Break down the clues by analyzing and thinking out loud]
@@ -114,7 +116,7 @@ def start():
         data = json.loads(chess_puzzle[13])
         chess_board.make(data)
 
-        is_success = convertToVideo.process(chess_puzzle[0], chess_puzzle[1])
+        is_success = convertToVideo.process(chess_puzzle[0], chess_puzzle[1], START_WITH)
 
         if is_success:
             databasecon.execute("""

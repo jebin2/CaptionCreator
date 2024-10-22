@@ -26,7 +26,7 @@ def createContent(interval=2):
             SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
             FROM entries
             WHERE (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
-            AND type = 'text'
+            AND type = 'chess'
         """)
         CHESS_PUZZLE = len(chessEntries)
 
@@ -34,10 +34,11 @@ def createContent(interval=2):
             SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
             FROM entries
             WHERE (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
-            AND type = 'text'
+            AND type = 'facts'
         """)
         FACTS = len(factsEntries) - 1
         
+        print(f'{TEXT_PUZZLE}, {2 * CHESS_PUZZLE}, {FACTS}')
         if TEXT_PUZZLE <= 2 * CHESS_PUZZLE or TEXT_PUZZLE <= FACTS:
             is_success = createTextPuzzle.start()
             if is_success:

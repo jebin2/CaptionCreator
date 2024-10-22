@@ -47,9 +47,9 @@ def createContent(interval=2):
             logging.info("Starting for chess puzzle to process...")
         
         else:
-            logging.info("Skipping Text Puzzle creation as it reached limit...")
+            logging.warning("Skipping Text Puzzle creation as it reached limit...")
         
-        if FACTS <= 2 * CHESS_PUZZLE and TEXT_PUZZLE <= FACTS:
+        if FACTS <= 2 * CHESS_PUZZLE or FACTS <= TEXT_PUZZLE:
             is_success = createChessPuzzle.start()
             if is_success:
                 logging.info("End")
@@ -62,7 +62,7 @@ def createContent(interval=2):
             logger_config.wait_with_logs(interval, "for next content to create...")   
         
         else:
-            logging.info("Skipping Chess puzzle creation as it reached limit...")
+            logging.warning("Skipping Chess puzzle creation as it reached limit...")
 
         if TEXT_PUZZLE > 2 * CHESS_PUZZLE:
             is_success = create_facts.start()
@@ -75,7 +75,7 @@ def createContent(interval=2):
                 logging.error("Unable to create facts. please check now...")
                 
         else:
-            logging.info("Skipping Chess chess creation as it reached limit...")
+            logging.warning("Skipping Chess chess creation as it reached limit...")
 
         logger_config.wait_with_logs(interval, "for next content to create...")    
 

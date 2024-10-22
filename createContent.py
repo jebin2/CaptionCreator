@@ -5,9 +5,11 @@ import createTextPuzzle
 import createChessPuzzle
 import create_facts
 import databasecon
+import gc
 
 def createContent(interval=2):
     while True:
+        gc.collect()  # Forces garbage collection
         logging.info("Starting for text puzzle to process...")
 
         textEntries = databasecon.execute(f""" 

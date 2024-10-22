@@ -1,9 +1,17 @@
-import pyautogui
+import sys
+
+is_pygui_available = True
+try:
+    import pyautogui
+except KeyError as e:
+    is_pygui_available = False
+
 import cv2
 import numpy as np
 import time
 import glob
 import os
+import common
 from logger_config import setup_logging
 
 logging = setup_logging()
@@ -128,6 +136,10 @@ def delete_source():
 
 def createAudioAndDownload(custom_instruction, source):
     try:
+        if not is_pygui_available:
+            logging.info("Error: DISPLAY environment variable is not set. Exiting program.")
+            return None
+
         logging.info(F"Custom Instruction: {custom_instruction}")
         logging.info(F"Source: {source}")
         # Allow some time to switch to the desired window
@@ -187,10 +199,15 @@ def createAudioAndDownload(custom_instruction, source):
         # Get the list of all files in the directory
         list_of_files = glob.glob(os.path.join(directory, '*'))  # Get all file paths
         if list_of_files:
-            # Find the most recently created file
             latest_file = max(list_of_files, key=os.path.getctime)
-            print(f"The latest created file is: {latest_file}")
-            return latest_file
+
+            file_directory = os.path.dirname(latest_file)
+            new_file_name = os.path.join(file_directory, f'{common.generate_random_string()}.wav')
+            
+            os.rename(latest_file, new_file_name)
+            print(f"The latest created file is: {new_file_name}")
+            
+            return new_file_name
     
     except Exception as e:
         logging.error(f"Error updating database: {str(e)}", exc_info=True)

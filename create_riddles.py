@@ -33,6 +33,7 @@ def getSource(riddle):
 
 def get_prompt():
     try:
+        oldAnswers = ''
         result = databasecon.execute("SELECT answer FROM entries where type = 'text'")
         for (answer,) in result:
             oldAnswers += answer + ","

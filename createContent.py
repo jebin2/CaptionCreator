@@ -36,7 +36,7 @@ def createContent(interval=2):
         """)
         FACTS = len(factsEntries) - 1
         
-        if (TEXT_PUZZLE <= 2 * CHESS_PUZZLE or FACTS <= 2 * CHESS_PUZZLE) and TEXT_PUZZLE == FACTS:
+        if TEXT_PUZZLE <= 2 * CHESS_PUZZLE or TEXT_PUZZLE <= FACTS:
             is_success = createTextPuzzle.start()
             if is_success:
                 logging.info("End")

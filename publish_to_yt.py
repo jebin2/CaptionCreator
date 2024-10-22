@@ -76,7 +76,7 @@ def get_youtube_service(type='text'):
     logging.info("YouTube service built successfully.")
     return youtube_service
 
-def upload_video_to_youtube(video_path, thumbnail_path, title, description, type='text'):
+def upload_video_to_youtube(video_path, thumbnail_path, title, description, type='text', riddle_shorts=False, old_video_id=None):
     """Upload a video to YouTube and set the thumbnail."""
     logging.info(f"Starting upload for video: {video_path}")
 
@@ -86,10 +86,12 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
     tags = ['riddle', 'thinking', 'fun', 'challenges']
     if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge\n\n\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
+        final_des = f"{description}\n\n#chess #chessgame #chesspuzzle #challenges #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
     
     if 'facts' == type:
         final_des = "#shorts #interesting"
+        if riddle_shorts:
+            final_des += f"\n\n https://www.youtube.com/watch?v={old_video_id}"
         tags.append("shorts")
 
     request_body = {
@@ -148,7 +150,6 @@ def process_entries_in_db(type):
         AND type = '{type}'
     """, type='get')
 
-    logging.info(f'dfsdfsdf {entries}')
     if entries:
         logging.info("Will upload after 12 hrs")
         return
@@ -158,6 +159,7 @@ def process_entries_in_db(type):
     is_data_avail = False
     entries = None
     date_count = 0
+    riddle_shorts = False
     while not is_data_avail:
         date_contains = common.get_date(date_count)
         date_filter = f"AND title LIKE '%{date_contains}%'" if type == 'chess' else ''
@@ -182,16 +184,18 @@ def process_entries_in_db(type):
                 FROM entries 
                 WHERE title = ?
             """, (title,))
+            riddle_shorts = len(entries) > 1
 
     logging.info(f"Found {len(entries)} entries to process.")
     
     # Upload videos to YouTube
+    video_id = None
     for entry in entries:
         entry_id, title, description, video_path, thumbnail_path, type = entry
         logging.info(f"Processing entry {entry_id}: {title}")
 
         # Upload the video to YouTube
-        video_id = upload_video_to_youtube(video_path, thumbnail_path, title, description, type)
+        video_id = upload_video_to_youtube(video_path, thumbnail_path, title, description, type, riddle_shorts, video_id)
         
         if not video_id:
             logging.error(f"Error uploading video for entry {entry_id}. Stopping further uploads.")

@@ -144,10 +144,11 @@ def process_entries_in_db(type):
     logging.info("--------------------------------------")
     logging.info("Checking whether video upload in 12hrs")
     logging.info("--------------------------------------")
+    hours = 24 if type == 'chess' else 1
     entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
         FROM entries 
-        WHERE uploadedToYoutube > {int(time.time() * 1000) - (1 *60 * 60 * 1000)} 
+        WHERE uploadedToYoutube > {int(time.time() * 1000) - (hours *60 * 60 * 1000)} 
         AND uploadedToYoutube < {int(time.time() * 1000)}
         AND type = '{type}'
     """, type='get')

@@ -12,21 +12,8 @@ logging = setup_logging()
 
 START_WITH = 'Hello everyone'
 
-def getCustomInstruction(answer, riddle_shorts = False):
-    if riddle_shorts:
-        return f"""Start with '{START_WITH}... Today's mystery'
-[State riddle - Host1 and Host2 alternate reading each sentence]
-... ...
-End with 'Check the description to unlock this mystery...'
-Rules:
-Never acknowledge listener
-Direct reading given source only
-Strictly follow sequence exactly
-keep it very short
-No extra commentary
-"""
-    else:
-        return f"""Start with "{START_WITH}, Today's mystery"
+def getCustomInstruction(answer):
+    return f"""Start with "{START_WITH}, Today's mystery"
 [State riddle - Host1 and Host2 alternate reading each sentence]
 Let's unlock this mystery...
 [Break down the clues by analyzing and thinking out loud]
@@ -139,9 +126,7 @@ def start(riddle_data=None):
             else:
                 databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], riddle_data['riddle'], riddle_data['answer'], 'text'))
 
-                riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(None, True), getSource(riddle_data["riddle"]))
-                
-                databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", (riddle_data['audio_path'], riddle_data['title'], riddle_data['riddle'], '', riddle_data['answer'], 'facts'))
+                databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", ('--', riddle_data['title'], riddle_data['riddle'], '', riddle_data['answer'], 'facts'))
 
             return True
     

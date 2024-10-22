@@ -140,13 +140,13 @@ def createAudioAndDownload(custom_instruction, source):
         # Find and click the specified icons in sequence
         if not find_and_click('icon/add_icon.png'):
             log_message("Failed to find the add icon. Exiting...")
-            exit()
+            return None
         if not find_and_click('icon/copy_text_button.png'):
             log_message("Failed to find the copy text button. Exiting...")
-            exit()
+            return None
         if not find_and_click('icon/paste_input_box.png'):
             log_message("Failed to find the paste input box. Exiting...")
-            exit()
+            return None
 
         # Paste text (you can replace 'your text' with the actual text you want to paste)
         log_message("Pasting text into the input box...")
@@ -155,13 +155,13 @@ def createAudioAndDownload(custom_instruction, source):
 
         if not find_and_click('icon/paste_input_box_insert_button.png', wait_time=5):
             log_message("Failed to find the paste input box insert button. Exiting...")
-            exit()
+            return None
 
         is_generating_output(True)
 
         if not find_and_click('icon/customise_button.png'):
             log_message("Failed to find the customise button. Exiting...")
-            exit()
+            return None
 
         # Paste text again if needed
         log_message("Pasting text into the customise field...")
@@ -170,17 +170,17 @@ def createAudioAndDownload(custom_instruction, source):
 
         if not find_and_click('icon/customize_generate_icon.png'):
             log_message("Failed to find the customize generate icon. Exiting...")
-            exit()
+            return None
 
         is_generating_output()
 
         if not find_and_click('icon/hamburger_icon.png'):
             log_message("Failed to find the hamburger icon. Exiting...")
-            exit()
+            return None
 
         if not find_and_click('icon/download_option.png', wait_time=5):
             log_message("Failed to find the download option. Exiting...")
-            exit()
+            return None
         
         log_message("Process completed successfully.")
         # Ensure the directory is not empty

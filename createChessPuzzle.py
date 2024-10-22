@@ -12,7 +12,7 @@ import convertToVideo
 START_WITH = 'Hello everyone'
 
 def getCustomInstruction():
-    return f"""Start with "{START_WITH}!!, Today's Chess puzzle"
+    return f"""Start with "{START_WITH}..., Today's Chess puzzle"
 [State board - Board position slowly]
 Let's get this going...
 [Break down the clues by analyzing and thinking out loud]

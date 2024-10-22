@@ -9,9 +9,23 @@ import kmcontroller
 import convertToVideo
 
 START_WITH = 'Did you know'
+RIDDLE_SHORTS_START_WITH = 'Hello everyone'
 
-def getCustomInstruction():
-    return f"""Start with '{START_WITH}...'
+def getCustomInstruction(is_puzzle_shorts=False):
+    if is_puzzle_shorts:
+        return f"""Start with '{RIDDLE_SHORTS_START_WITH}... Today's mystery'
+[State riddle - Host1 and Host2 alternate reading each sentence]
+... ...
+End with 'Check the description to unlock this mystery...'
+Rules:
+Never acknowledge listener
+Direct reading given source only
+Strictly follow sequence exactly
+keep it very short
+No extra commentary
+"""
+    else:
+        return f"""Start with '{START_WITH}...'
 [Present each fact with engaging tone and short unexpected connections]
 [Add a single wow/amazing/incredible reaction]
 'Thank you for listening!'
@@ -83,10 +97,12 @@ def start():
         
         facts = databasecon.execute("SELECT * FROM entries WHERE type = 'facts' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         logging.info(f"Starting to create text puzzle... {facts}")
+
+        is_puzzle_shorts = len(databasecon.execute(f"SELECT * FROM entries WHERE id = '{facts[0]}' AND title = '{facts[2]}'")) > 0
+
+        autio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(is_puzzle_shorts), getSource(facts[3], facts[4]))
         
-        autio_path = kmcontroller.createAudioAndDownload(getCustomInstruction(), getSource(facts[3], facts[4]))
-        
-        is_success = convertToVideo.process(facts[0], autio_path, START_WITH)
+        is_success = convertToVideo.process(facts[0], autio_path, RIDDLE_SHORTS_START_WITH if is_puzzle_shorts else START_WITH)
         
         if is_success:
             databasecon.execute("""
@@ -109,5 +125,5 @@ def start():
 
     return is_success
 
-if __name__ == "__main__":
-    start()
+# if __name__ == "__main__":
+#     start()

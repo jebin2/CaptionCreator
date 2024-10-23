@@ -222,7 +222,7 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
     logging.info("Description replied successfully.")
 
     if 'Chess' in title:
-        chess_link = f"https://www.chess.com/daily-chess-puzzle/{title[-10]}"
+        chess_link = f"https://www.chess.com/daily-chess-puzzle/{title[-10:]}"
 
         # Step 4: Reply with the description
         reply_payload = {

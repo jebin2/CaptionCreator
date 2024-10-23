@@ -86,7 +86,7 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
     tags = ['riddle', 'thinking', 'fun', 'challenges']
     if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
+        final_des = f"{description}\n\n#chess #chesspuzzle #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10:]}"
     
     if 'facts' == type:
         final_des = "#shorts #interesting"

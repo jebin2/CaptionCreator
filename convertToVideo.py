@@ -194,7 +194,7 @@ def resize_thumbnail(thumbnail_path):
                 img.save(thumbnail_path, format='PNG', quality=quality)
                 file_size = os.path.getsize(thumbnail_path)
                 quality -= 5
-                logger_config.wait_with_logs(10)
+                logger_config.wait_with_logs(10, f'for rezising image; {file_size} max_file_size: {max_file_size}')
             logging.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
         else:
             logging.info(f"Thumbnail {thumbnail_path} is within size limits")

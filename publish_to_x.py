@@ -301,3 +301,8 @@ def start(interval=10):
         return False
 
     return True
+
+if __name__ == "__main__":
+    # Monitor the database and check every 2.5 minutes
+    logging.info("Twitter started. Monitoring the database.")
+    start(interval=10)

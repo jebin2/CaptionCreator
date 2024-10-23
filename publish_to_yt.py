@@ -154,7 +154,7 @@ def process_entries_in_db(type):
     """, type='get')
 
     if entries:
-        logging.info("Will upload after 12 hrs")
+        logging.info(f"Will upload after 12 hrs :: {entries}")
         return
 
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null
@@ -230,7 +230,7 @@ def start(interval=10):
 
     return True
 
-# if __name__ == "__main__":
-#     # Monitor the database and check every 2.5 minutes
-#     logging.info("YouTube video uploader started. Monitoring the database.")
-#     start(interval=10)
+if __name__ == "__main__":
+    # Monitor the database and check every 2.5 minutes
+    logging.info("YouTube video uploader started. Monitoring the database.")
+    start(interval=10)

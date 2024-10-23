@@ -176,7 +176,7 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
     if type == 'facts':
         if os.path.exists(video_path) and os.path.isfile(video_path):
             logging.info("Uploading media from: %s", video_path)
-            media_id = upload_video(oauth, thumbnail_path)
+            media_id = upload_video(oauth, video_path)
     else:
         if os.path.exists(thumbnail_path) and os.path.isfile(thumbnail_path):
             logging.info("Uploading image from: %s", thumbnail_path)
@@ -244,23 +244,16 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
     return tweet_id
 
 def process_entries_in_db():
-    """Check the database for videos to upload to Twitter."""
-    logging.info("Connecting to database: %s", custom_env.DATABASE_PATH)
-    db = sqlite3.connect(custom_env.DATABASE_PATH)
-    cursor = db.cursor()
-
-    # Query for entries where generatedThumbnailPath are not null
     logging.info("Fetching entries ready for Twitter posting.")
-    databasecon.execute(""" 
+    entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, youtubeVideoId, type 
         FROM entries 
         WHERE generatedThumbnailPath IS NOT NULL 
         AND (uploadedToX = 0 OR uploadedToX IS NULL)
         AND uploadedToYoutube > 0
-        AND uploadedToYoutube < ? 
-    """, (int(time.time() * 1000) - 300000,))  # 5 minutes in milliseconds
+        AND uploadedToYoutube < '{int(time.time() * 1000) - 300000}' 
+    """)  # 5 minutes in milliseconds
 
-    entries = cursor.fetchall()
     logging.info("Found %d entries to process.", len(entries))
 
     # Post to X (after all uploads are complete)
@@ -276,7 +269,6 @@ def process_entries_in_db():
         logging.info("Marking entry ID: %d as posted to Twitter with tweet ID: %s", entry_id, tweet_id)
         current_timestamp_ms = int(time.time() * 1000)
         databasecon.execute("UPDATE entries SET uploadedToX = ?, tweetId = ? WHERE id = ?", (current_timestamp_ms, tweet_id, entry_id,))
-        db.commit()
 
         logging.info(f"========================================================")
         logging.info(f"=                                                      =")
@@ -290,7 +282,6 @@ def process_entries_in_db():
         common.remove_file(video_path)
 
     logging.info("Closing the database connection.")
-    db.close()
 
 def start(interval=10):
     try:

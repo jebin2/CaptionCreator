@@ -67,12 +67,11 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
 
     return None
 
-def create_text_image(text, background_path, temp_filename, font_path, font_size=70, padding=50, extra_space=100, stroke_width=2, description="", answer="", img_size=IMAGE_SIZE):
+def create_text_image(text, background_path, temp_filename, font_path, font_size=70, padding=50, extra_space=100, stroke_width=2, description="", answer="", img_size=IMAGE_SIZE, type='text'):
     logging.info(f"Creating text image with background: {background_path}")
     try:
         background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
-        font = ImageFont.truetype(font_path, font_size)
 
         # Function to wrap text into lines based on the width
         def wrap_text(text, font, max_width):
@@ -125,12 +124,14 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
 
         # Draw static text at the bottom
         if answer:
-            bottom_font_size = int(font_size * 0.8)
+            bottom_font_size = int(font_size * (0.8  if type != 'chess' else 1))
             bottom_font = ImageFont.truetype(font_path, bottom_font_size)
-            max_bottom_width = img_size[0] - (2 * padding) - (2 * extra_space)
+            img_start_size = img_size[0] if type != 'chess' else ((img_size[0]-img_size[1])/2)
+            max_bottom_width = img_start_size - (2 * padding) - (2 * extra_space)
 
             # Wrap the bottom static text with the prefix
-            wrapped_bottom_text = wrap_text("Answer is :: " + answer, bottom_font, max_bottom_width)
+            local_answer = f"Answer is :: {answer}" if type != 'chess' else answer
+            wrapped_bottom_text = wrap_text(local_answer, bottom_font, max_bottom_width)
 
             # Calculate y-position for the bottom static text
             total_bottom_height = len(wrapped_bottom_text) * (bottom_font_size + 10)
@@ -139,7 +140,7 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
             # Draw the black border for bottom static text
             for i, line in enumerate(wrapped_bottom_text):
                 text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
-                bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+                bottom_x = (img_start_size - text_width) / 2  # Center the text horizontally
                 
                 for dx in range(-stroke_width, stroke_width + 1):
                     for dy in range(-stroke_width, stroke_width + 1):
@@ -149,27 +150,29 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
             # Draw the white bottom static text on top of the black stroke
             for i, line in enumerate(wrapped_bottom_text):
                 text_width = draw.textbbox((0, 0), line, font=bottom_font)[2] - draw.textbbox((0, 0), line, font=bottom_font)[0]
-                bottom_x = (img_size[0] - text_width) / 2  # Center the text horizontally
+                bottom_x = (img_start_size - text_width) / 2  # Center the text horizontally
                 draw.text((bottom_x, bottom_y + i * (bottom_font_size + 10)), line, font=bottom_font, fill="white")
 
         # Process the main text
-        max_text_width = img_size[0] - (2 * padding) - (2 * extra_space)
-        wrapped_text = wrap_text(text, font, max_text_width)
+        if text:
+            font = ImageFont.truetype(font_path, font_size)
+            max_text_width = img_size[0] - (2 * padding) - (2 * extra_space)
+            wrapped_text = wrap_text(text, font, max_text_width)
 
-        total_height = len(wrapped_text) * (font_size + 10)
-        x = (img_size[0] - (img_size[0] - (2 * padding) - (2 * extra_space))) / 2
-        y = (img_size[1] - total_height) / 2
+            total_height = len(wrapped_text) * (font_size + 10)
+            x = (img_size[0] - (img_size[0] - (2 * padding) - (2 * extra_space))) / 2
+            y = (img_size[1] - total_height) / 2
 
-        # Draw the black border for each letter of dynamic text
-        for i, line in enumerate(wrapped_text):
-            for dx in range(-stroke_width, stroke_width + 1):
-                for dy in range(-stroke_width, stroke_width + 1):
-                    if dx != 0 or dy != 0:
-                        draw.text((x + extra_space + dx, y + i * (font_size + 10) + dy), line, font=font, fill="black")
+            # Draw the black border for each letter of dynamic text
+            for i, line in enumerate(wrapped_text):
+                for dx in range(-stroke_width, stroke_width + 1):
+                    for dy in range(-stroke_width, stroke_width + 1):
+                        if dx != 0 or dy != 0:
+                            draw.text((x + extra_space + dx, y + i * (font_size + 10) + dy), line, font=font, fill="black")
 
-        # Draw the white bold text on top of the black stroke
-        for i, line in enumerate(wrapped_text):
-            draw.text((x + extra_space, y + i * (font_size + 10)), line, font=font, fill="white")
+            # Draw the white bold text on top of the black stroke
+            for i, line in enumerate(wrapped_text):
+                draw.text((x + extra_space, y + i * (font_size + 10)), line, font=font, fill="white")
 
         # Save the image
         background.save(temp_filename)
@@ -264,16 +267,23 @@ def process(id, audio_path=None, startWith = None):
     start_show_answer = show_ans_segment['start'] if show_ans_segment and 'start' in show_ans_segment else audio.duration / 2
     # end_time = segments[-1]['end']
 
+    font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
     txt_clips = []
     if type == 'chess':
-        background = Image.open(background_path).resize(IMAGE_SIZE)
-        # Save the image
-        background.save(TEMP_FILENAME)
-        logging.info(f"Text image created and saved to {TEMP_FILENAME}")
+        temp_image_path = create_text_image(
+            '',
+            background_path,
+            TEMP_FILENAME,
+            font_path,
+            answer=f'Answer at {start_show_answer}s',
+            type='chess'
+        )
 
-        clip = ImageClip(TEMP_FILENAME).set_duration(start_show_answer).set_start(0)
+        clip = ImageClip(temp_image_path).set_duration(start_show_answer).set_start(0)
         txt_clips.append(clip)
-        os.remove(TEMP_FILENAME)
+        os.remove(temp_image_path)
+
+        logging.info(f"Clip created for file {temp_image_path} start at 0")
 
         logging.info(f"Getting Chess move files...")
         files = common.list_files_recursive(custom_env.CHESS_MOVES_PATH)
@@ -290,9 +300,20 @@ def process(id, audio_path=None, startWith = None):
                 file_in_order = [file for file in filtered_files if file.endswith(f'new_chess_board-update-{i}-{j}.jpg')]
                 
                 if file_in_order:
-                    clip = ImageClip(file_in_order[0]).set_duration(move_duration).set_start(start_show_answer + secondCount)
+                    temp_image_path = create_text_image(
+                        '',
+                        file_in_order[0],
+                        TEMP_FILENAME,
+                        font_path,
+                        answer=f'Answer at {start_show_answer}s',
+                        type='chess'
+                    )
+
+                    clip = ImageClip(temp_image_path).set_duration(move_duration).set_start(start_show_answer + secondCount)
                     txt_clips.append(clip)
-                    logging.info(f"Clip created for file {file_in_order[0]} start at {start_show_answer}")
+                    os.remove(temp_image_path)
+
+                    logging.info(f"Clip created for file {temp_image_path} start at {start_show_answer}")
                     secondCount += move_duration  # Increment for the next clip duration
                 else:
                     can_break = True
@@ -300,7 +321,6 @@ def process(id, audio_path=None, startWith = None):
             if can_break:
                 break
     else:
-        font_path = get_random_file_name(FONT_PATH, FONT_LABEL, FONT_N, FONT_EXT)
         for i, segment in enumerate(segments):
             try:
                 # If near the answer, show the bottom static text
@@ -377,4 +397,4 @@ def process(id, audio_path=None, startWith = None):
     return True
 
 # if __name__ == "__main__":
-#     process('/home/jebineinstein/git/CaptionCreator/audio/Untitled notebook.wav')
+#     process(120, '/home/jebineinstein/git/CaptionCreator/audio/sample.wav')

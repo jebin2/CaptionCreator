@@ -86,7 +86,7 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
     final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
     tags = ['riddle', 'thinking', 'fun', 'challenges']
     if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #chesspuzzle #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
+        final_des = f"{description}\n\n#chess #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10]}"
     
     if 'facts' == type:
         final_des = "#shorts #interesting"
@@ -154,7 +154,7 @@ def process_entries_in_db(type):
     """, type='get')
 
     if entries:
-        logging.info(f"Will upload after 12 hrs :: {entries}")
+        logging.info(f"Will upload after 1 hrs :: {entries}")
         return
 
     # Query for entries where generatedVideoPath and generatedThumbnailPath are not null
@@ -165,7 +165,7 @@ def process_entries_in_db(type):
     riddle_shorts = False
     while not is_data_avail:
         date_contains = common.get_date(date_count)
-        date_filter = f"AND title LIKE '%{date_contains}%'" if type == 'chess' else ''
+        filter = f"AND title LIKE '%{date_contains}%'" if type == 'chess' else ''
         entries = databasecon.execute(f""" 
             SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
             FROM entries 
@@ -173,7 +173,7 @@ def process_entries_in_db(type):
             AND (generatedThumbnailPath IS NOT NULL AND generatedThumbnailPath != '')
             AND (uploadedToYoutube = 0 OR uploadedToYoutube IS NULL)
             AND type = '{type}'
-            {date_filter}
+            {filter}
             limit 1
         """)
         date_count += 1
@@ -188,6 +188,22 @@ def process_entries_in_db(type):
                 WHERE title = ?
             """, (title,))
             riddle_shorts = len(entries) > 1
+
+        if len(entries) > 0 and type == 'facts':
+            title = entries[0][1]
+            logging.info(f"Checking facts for title {title} entries to process.")
+            entries = databasecon.execute(f""" 
+                SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+                FROM entries 
+                WHERE title = ? AND type = 'text'
+            """, (title, type))
+
+            if len(entries) > 0:
+                entries = databasecon.execute(f""" 
+                    SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
+                    FROM entries 
+                    WHERE title != ? AND type = ?
+                """, (title, type))
 
     logging.info(f"Found {len(entries)} entries to process.")
     

@@ -210,6 +210,13 @@ def process_entries_in_db(type):
         databasecon.execute("UPDATE entries SET uploadedToYoutube = ?, youtubeVideoId = ? WHERE id = ?", (current_timestamp_ms, video_id, entry_id,))
         logging.info(f"Entry {entry_id} successfully updated in the database.")
 
+        logging.info(f"========================================================")
+        logging.info(f"=                                                      =")
+        logging.info(f"=Entry {entry_id} successfully posted to YT            =")
+        logging.info(f"=                                                      =")
+        logging.info(f"========================================================")
+
+
         logging.info("Sleeping for 1 minute before next upload...")
 
 def start(interval=10):

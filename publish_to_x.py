@@ -278,6 +278,12 @@ def process_entries_in_db():
         databasecon.execute("UPDATE entries SET uploadedToX = ?, tweetId = ? WHERE id = ?", (current_timestamp_ms, tweet_id, entry_id,))
         db.commit()
 
+        logging.info(f"========================================================")
+        logging.info(f"=                                                      =")
+        logging.info(f"=Entry {entry_id} successfully posted to X             =")
+        logging.info(f"=                                                      =")
+        logging.info(f"========================================================")
+
         logging.info("Sleeping for 1 minute before processing the next entry.")
         logger_config.wait_with_logs(60)  # 1 minute
         common.remove_file(thumbnail_path)

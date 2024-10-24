@@ -6,6 +6,7 @@ import string
 import random
 from datetime import datetime, timedelta
 import logger_config
+import databasecon
 
 def file_exists(file_path):
     try:
@@ -78,3 +79,20 @@ def get_date(when=0):
 
     sub_day_str = sub_day.strftime('%Y-%m-%d')    
     return sub_day_str
+
+def update_database_status(entry_id: int, is_success: bool):
+    """Update database with processing status."""
+    if is_success:
+        databasecon.execute(
+            "UPDATE entries SET audioPath = 'Done' WHERE id = ?",
+            (entry_id,)
+        )
+    else:
+        databasecon.execute(
+            """UPDATE entries 
+            SET audioPath = 'Failed',
+                generatedVideoPath = '',
+                generatedThumbnailPath = ''
+            WHERE id = ?""",
+            (entry_id,)
+        )

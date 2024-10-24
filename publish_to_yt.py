@@ -176,10 +176,10 @@ Logic riddles
     return video_id
 
 def process_entries_in_db(type):
-    logger_config.info("--------------------------------------")
-    logger_config.info("Checking whether video upload in 12hrs")
-    logger_config.info("--------------------------------------")
-    hours = 24 if type == 'chess' else 1
+    logger_config.info("----------------------------------------------")
+    logger_config.info(f"Checking whether video upload in 12hrs {type}")
+    logger_config.info("----------------------------------------------")
+    hours = 24 if type == 'chess' else 24
     entries = databasecon.execute(f""" 
         SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
         FROM entries 
@@ -225,20 +225,23 @@ def process_entries_in_db(type):
             riddle_shorts = len(entries) > 1
 
         if len(entries) > 0 and type == 'facts':
+            oldEntries = entries
             title = entries[0][1]
             logger_config.info(f"Checking facts for title {title} entries to process.")
             entries = databasecon.execute(f""" 
                 SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
                 FROM entries 
                 WHERE title = ? AND type = 'text'
-            """, (title, type))
+            """, (title))
 
-            if len(entries) > 0:
+            if entries and len(entries) > 0:
                 entries = databasecon.execute(f""" 
                     SELECT id, title, description, generatedVideoPath, generatedThumbnailPath, type
                     FROM entries 
                     WHERE title != ? AND type = ?
                 """, (title, type))
+            else:
+                entries = oldEntries
 
     logger_config.info(f"Found {len(entries)} entries to process.")
     
@@ -275,13 +278,14 @@ def start(interval=10):
         logger_config.info(f"Starting database monitor with an interval of {interval} seconds.")
         while True:
             logger_config.info("Checking the database for new entries.")
-            process_entries_in_db('text')
-            process_entries_in_db('chess')
-            process_entries_in_db('facts')
+            process_entries_in_db('long_form_text')
+            # process_entries_in_db('text')
+            # process_entries_in_db('chess')
+            # process_entries_in_db('facts')
             logger_config.info(f"Sleeping for {interval} seconds before next check.")
-            logger_config.info(f"Waiting before new YT post", 10)
             if interval == 0:
-                break 
+                break
+            logger_config.info(f"Waiting before new YT post", 10)
     except Exception as e:
         logger_config.error(f"Error in publish to yt:: {str(e)}")
         return False
@@ -291,4 +295,4 @@ def start(interval=10):
 if __name__ == "__main__":
     # Monitor the database and check every 2.5 minutes
     logger_config.info("YouTube video uploader started. Monitoring the database.")
-    start(interval=10)
+    start(interval=0)

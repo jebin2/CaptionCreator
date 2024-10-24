@@ -27,5 +27,11 @@ def get(audio_path, fromText=None, endText=None, segments=None):
 
     return path
 
-if __name__ == "__main__":
-	get("audio/AaZcGQ.wav", "Hello everyone", "Thank you for listening")
+# if __name__ == "__main__":
+	# get("background_music/Untitled notebook.wav", "Hello everyone", "Thank you for listening")
+    # audio = AudioFileClip("audio/AaZcGQ.wav")
+    # audio = audio.subclip(78.4, 82.5)
+    # audio = AudioFileClip("background_music/Untitled notebook.wav")
+    # audio = audio.subclip(0, 1.6)
+    # audio.write_audiofile("background_music/next_puzzle.wav")
+    

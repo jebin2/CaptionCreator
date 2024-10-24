@@ -61,12 +61,12 @@ def authenticate():
 
     resource_owner_key = fetch_response.get("oauth_token")
     resource_owner_secret = fetch_response.get("oauth_token_secret")
-    logger_config.info("OAuth token received: %s", resource_owner_key)
+    logger_config.info(f"OAuth token received: {resource_owner_key}")
 
     # Get authorization
     base_authorization_url = "https://api.twitter.com/oauth/authorize"
     authorization_url = oauth.authorization_url(base_authorization_url)
-    logger_config.info("Please go here and authorize: %s", authorization_url)
+    logger_config.info(f"Please go here and authorize: {authorization_url}")
     verifier = input("Paste the PIN here: ")
 
     # Get the access token
@@ -96,11 +96,11 @@ def upload_image(oauth, image_path):
         response = oauth.post(media_upload_url, files={"media": image_file})
 
     if response.status_code != 200:
-        logger_config.error("Image upload failed: %s %s", response.status_code, response.text)
+        logger_config.error(f"Image upload failed: {response.status_code} {response.text}")
         return None
 
     media_id = response.json()['media_id_string']
-    logger_config.info("Image uploaded successfully, media ID: %s", media_id)
+    logger_config.info(f"Image uploaded successfully, media ID: {media_id}")
     return media_id
 
 
@@ -118,11 +118,11 @@ def upload_video(oauth, video_path):
     }
     response = oauth.post(media_upload_url, data=init_data)
     if response.status_code != 202:
-        logger_config.error("Video INIT failed: %s %s", response.status_code, response.text)
+        logger_config.error(f"Video INIT failed: {response.status_code} {response.text}")
         return None
 
     media_id = response.json()['media_id_string']
-    logger_config.info("Video INIT successful, media ID: %s", media_id)
+    logger_config.info(f"Video INIT successful, media ID: {media_id}")
 
     # Step 2: APPEND the video in chunks
     with open(video_path, 'rb') as video_file:
@@ -139,7 +139,7 @@ def upload_video(oauth, video_path):
             files = {"media": chunk}
             response = oauth.post(media_upload_url, data=append_data, files=files)
             if response.status_code != 204:
-                logger_config.error("Video APPEND failed: %s %s", response.status_code, response.text)
+                logger_config.error(f"Video APPEND failed: {response.status_code} {response.text}")
                 return None
             segment_id += 1
 
@@ -150,16 +150,16 @@ def upload_video(oauth, video_path):
     }
     response = oauth.post(media_upload_url, data=finalize_data)
     if response.status_code != 201:
-        logger_config.error("Video FINALIZE failed: %s %s", response.status_code, response.text)
+        logger_config.error(f"Video FINALIZE failed: {response.status_code} {response.text}")
         return None
 
-    logger_config.info("Video FINALIZE successful, media ID: %s", media_id)
+    logger_config.info(f"Video FINALIZE successful, media ID: {media_id}")
     return media_id
 
 def post_to_x(title, video_path, thumbnail_path, description, type):
     """Post to Twitter with the video title, an image, and reply with the description."""
     
-    logger_config.info("Starting post to Twitter for title: %s", title)
+    logger_config.info(f"Starting post to Twitter for title: {title}")
     access_token, access_token_secret = authenticate()
 
     # Make the request with the access tokens
@@ -173,11 +173,11 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
     media_id = None
     if type == 'facts':
         if os.path.exists(video_path) and os.path.isfile(video_path):
-            logger_config.info("Uploading media from: %s", video_path)
+            logger_config.info(f"Uploading media from: {video_path}")
             media_id = upload_video(oauth, video_path)
     else:
         if os.path.exists(thumbnail_path) and os.path.isfile(thumbnail_path):
-            logger_config.info("Uploading image from: %s", thumbnail_path)
+            logger_config.info(f"Uploading image from: {thumbnail_path}")
             media_id = upload_image(oauth, thumbnail_path)
 
     if media_id:
@@ -190,12 +190,12 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
             "text": title
         }
 
-    logger_config.info("Posting tweet with title: %s", title)
+    logger_config.info(f"Posting tweet with title: {title}")
     tweet_url_v2 = "https://api.twitter.com/2/tweets"
     response = oauth.post(tweet_url_v2, json=tweet_payload)
 
     if response.status_code != 201:
-        logger_config.error("Tweet post failed: %s %s", response.status_code, response.text)
+        logger_config.error(f"Tweet post failed: {response.status_code} {response.text}")
         raise Exception("Request returned an error when posting tweet: {} {}".format(response.status_code, response.text))
 
     logger_config.info("Tweet posted successfully!")
@@ -210,11 +210,11 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
         }
     }
 
-    logger_config.info("Replying to tweet ID: %s with description.", tweet_id)
+    logger_config.info(f"Replying to tweet ID: {tweet_id} with description.")
     response = oauth.post(tweet_url_v2, json=reply_payload)
 
     if response.status_code != 201:
-        logger_config.error("Reply to tweet failed: %s %s", response.status_code, response.text)
+        logger_config.error(f"Reply to tweet failed: {response.status_code} {response.text}")
         raise Exception("Request returned an error when replying to tweet: {} {}".format(response.status_code, response.text))
 
     logger_config.info("Description replied successfully.")
@@ -230,11 +230,11 @@ def post_to_x(title, video_path, thumbnail_path, description, type):
             }
         }
 
-        logger_config.info("Replying to tweet ID: %s with description.", tweet_id)
+        logger_config.info(f"Replying to tweet ID: {tweet_id} with description.")
         response = oauth.post(tweet_url_v2, json=reply_payload)
 
         if response.status_code != 201:
-            logger_config.error("Reply to tweet failed: %s %s", response.status_code, response.text)
+            logger_config.error(f"Reply to tweet failed: {response.status_code} {response.text}")
             raise Exception("Request returned an error when replying to tweet: {} {}".format(response.status_code, response.text))
 
         logger_config.info("Chess Link replied successfully.")
@@ -252,19 +252,21 @@ def process_entries_in_db():
         AND uploadedToYoutube < '{int(time.time() * 1000) - 300000}' 
     """)  # 5 minutes in milliseconds
 
-    logger_config.info("Found %d entries to process.", len(entries))
+    logger_config.info(f"Found {len(entries)} entries to process.")
 
     # Post to X (after all uploads are complete)
     for entry in entries:
         entry_id, title, description, video_path, thumbnail_path, youtubeVideoId, type = entry
-        logger_config.info("Processing entry ID: %d for posting to Twitter.", entry_id)
+        logger_config.info(f"Processing entry ID: {entry_id} for posting to Twitter.")
 
         # Post to X
+        if type == '':
+            description = 'Check out this video'
         youtube_link = f" https://www.youtube.com/watch?v={youtubeVideoId}" if youtubeVideoId else ""
         tweet_id = post_to_x(title, video_path, thumbnail_path, str(description + youtube_link), type)
 
         # Mark the entry as posted to X
-        logger_config.info("Marking entry ID: %d as posted to Twitter with tweet ID: %s", entry_id, tweet_id)
+        logger_config.info(f"Marking entry ID: {entry_id} as posted to Twitter with tweet ID: {tweet_id}")
         current_timestamp_ms = int(time.time() * 1000)
         databasecon.execute("UPDATE entries SET uploadedToX = ?, tweetId = ? WHERE id = ?", (current_timestamp_ms, tweet_id, entry_id,))
 
@@ -282,14 +284,14 @@ def process_entries_in_db():
 
 def start(interval=10):
     try:
-        logger_config.info("Starting database monitor with an interval of %d seconds.", interval)
+        logger_config.info(f"Starting database monitor with an interval of {interval} seconds.", interval)
         while True:
             logger_config.info("Checking database for new entries.")
             process_entries_in_db()
-            logger_config.info("Sleeping for %d seconds before next check.", interval)
-            logger_config.info(f"Waiting before new X post", 10)
+            logger_config.info(f"Sleeping for {interval} seconds before next check.", interval)
             if interval == 0:
                 break
+            logger_config.info(f"Waiting before new X post", interval)
     except Exception as e:
         logger_config.error(f"Error in publish to X:: {str(e)}")
         return False

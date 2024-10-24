@@ -7,6 +7,7 @@ import databasecon
 import gc
 import publish_to_yt
 import publish_to_x
+import createLongForm
 
 def createContent(interval=2):
     while True:
@@ -80,6 +81,15 @@ def createContent(interval=2):
         
         else:
             logger_config.warning("Skipping Chess puzzle creation as it reached limit...")
+
+        is_success = createLongForm.start()
+        if is_success:
+            logger_config.info("End")
+        else:
+            logger_config.error("Unable to create Long form puzzle. please check now...")
+            logger_config.error("Unable to create Long form puzzle. please check now...")
+            logger_config.error("Unable to create Long form puzzle. please check now...")
+            logger_config.error("Unable to create Long form puzzle. please check now...")
 
         publish_to_yt.start(0)
 

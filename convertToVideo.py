@@ -13,6 +13,7 @@ import retrieveText
 import databasecon
 import common
 import custom_env
+import resize_image
 
 BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
@@ -180,30 +181,6 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
         logger_config.error(f"Error creating text image: {str(e)}")
         return ""
 
-def resize_thumbnail(thumbnail_path):
-    """Resize and compress the thumbnail image if it's larger than 2 MB."""
-    logger_config.info(f"Checking thumbnail size: {thumbnail_path}")
-    max_file_size = 2 * 1024 * 1024  # 2 MB
-    try:
-        img = Image.open(thumbnail_path)
-        file_size = os.path.getsize(thumbnail_path)
-        if file_size > max_file_size:
-            logger_config.info(f"Resizing thumbnail {thumbnail_path}")
-            img.thumbnail((1280, 720))
-            quality = 95
-            while file_size > max_file_size:
-                img.save(thumbnail_path, format='PNG', quality=quality)
-                file_size = os.path.getsize(thumbnail_path)
-                quality -= 5
-                logger_config.info(f'for rezising image; {file_size} max_file_size: {max_file_size}', 10)
-            logger_config.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
-        else:
-            logger_config.info(f"Thumbnail {thumbnail_path} is within size limits")
-        return thumbnail_path
-    except Exception as e:
-        logger_config.error(f"Error resizing thumbnail: {str(e)}")
-        return thumbnail_path
-
 def process(id, audio_path=None, startWith = None, puzzle_start_w_title=None):
     logger_config.info(f"Processing audio:: {audio_path}")
     if common.file_exists(audio_path) is False:
@@ -319,20 +296,34 @@ def process(id, audio_path=None, startWith = None, puzzle_start_w_title=None):
             if can_break:
                 break
     else:
+        background_path_change = False
+        final_desc = ''
+        final_answer = ''
+        puzzle_count = 0
         for i, segment in enumerate(segments):
             try:
-                final_desc = ''
-                final_answer = ''
                 if type == 'text':
                     final_desc = description
                     if segment["start"] >= show_ans_segment["start"]:
                         final_answer = answer
-                if puzzle_start_w_title and type == 'long_form_text':
-                    for details in puzzle_start_w_title:
-                        if segment['start'] >= details['start'] or segment['end'] <= details['end']:
-                            final_desc = details['text']
-                            logger_config.info(f"final_desc:: {final_desc}, start:: {details['start']}, end:: {details['start']}")
-                            break
+                elif puzzle_start_w_title and type == 'long_form_text':
+                    if puzzle_count < len(puzzle_start_w_title) and (i == 0 or 'next puzzle'.lower() in segment["text"].lower()):
+                        background_path_change = True
+                        final_desc = puzzle_start_w_title[puzzle_count]['description']
+                        final_answer = ''
+                        logger_config.success(f"final_desc:: {final_desc}, answer {final_answer} start:: {puzzle_start_w_title[puzzle_count]['start']}, end:: {puzzle_start_w_title[puzzle_count]['end']}")
+                    if puzzle_count < len(puzzle_start_w_title) and ('answer is'.lower() in segment["text"].lower() or puzzle_start_w_title[puzzle_count]['answer'].lower() in segment["text"].lower()):
+                        final_answer = puzzle_start_w_title[puzzle_count]['answer']
+                        logger_config.success(f"final_desc:: {final_desc}, answer {final_answer} start:: {puzzle_start_w_title[puzzle_count]['start']}, end:: {puzzle_start_w_title[puzzle_count]['end']}")
+                        puzzle_count += 1
+
+                else:
+                    final_desc = ''
+                    final_answer = ''
+
+                if background_path_change:
+                    background_path_change = False
+                    background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT, type)
 
                 temp_image_path = create_text_image(
                     segment["text"], 
@@ -387,6 +378,7 @@ def process(id, audio_path=None, startWith = None, puzzle_start_w_title=None):
                 background_path,
                 thumbnail_path,
                 font_path,
+                font_size=140,
                 img_size=IMAGE_SIZE[::-1] if type == "facts" else IMAGE_SIZE
             )
 
@@ -395,13 +387,21 @@ def process(id, audio_path=None, startWith = None, puzzle_start_w_title=None):
         logger_config.error(f"Error generating thumbnail: {str(e)}")
     
     # Resize the thumbnail
-    resize_thumbnail(thumbnail_path)
+    resize_image.start(thumbnail_path)
     
     databasecon.execute("""
             UPDATE entries 
             SET generatedVideoPath = ?, generatedThumbnailPath = ?
             WHERE id = ?
         """, (output_path, thumbnail_path, id))
+    
+    if puzzle_start_w_title and type == 'long_form_text':
+        for details in puzzle_start_w_title:
+            databasecon.execute("""
+                UPDATE entries 
+                SET addedToLongForm = ?
+                WHERE id = ?
+            """, (id, details['id']))
     
     common.remove_file(audio_path)
     return True

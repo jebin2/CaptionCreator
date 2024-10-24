@@ -96,3 +96,6 @@ def update_database_status(entry_id: int, is_success: bool):
             WHERE id = ?""",
             (entry_id,)
         )
+
+def getNonProcessedFirstData(type):
+    return databasecon.execute(f"SELECT * FROM entries WHERE type ='{type}' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')

@@ -30,7 +30,7 @@ def format_moves(moves):
 
 def start():
     try:
-        text_puzzle = databasecon.execute("SELECT * FROM entries WHERE type ='text' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
+        text_puzzle = common.getNonProcessedFirstData('text')
         if text_puzzle is None:
             logger_config.info("No text puzzle is available")
             is_data_added = False

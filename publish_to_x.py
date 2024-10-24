@@ -276,7 +276,7 @@ def process_entries_in_db():
 
         logger_config.info("Sleeping for 1 minute before processing the next entry.")
         common.remove_file(thumbnail_path)
-        common.remove_file(video_path)
+        # common.remove_file(video_path)
 
     logger_config.info("Closing the database connection.")
 

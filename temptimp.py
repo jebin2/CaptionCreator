@@ -1,4 +1,5 @@
 import whisper
+import logger_config
 
 # Load Whisper model
 model = whisper.load_model("base")

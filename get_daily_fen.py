@@ -2,6 +2,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 import re
+import logger_config
 
 def get_date_range(when=2):
     today = datetime.now()

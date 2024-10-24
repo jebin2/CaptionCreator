@@ -1,12 +1,10 @@
-import logger_config
-logging = logger_config.setup_logging()
-
 import databasecon
 import getResponseFromOllama
 import re
 import json
 import kmcontroller
 import convertToVideo
+import logger_config
 
 START_WITH = 'Did you know'
 RIDDLE_SHORTS_START_WITH = 'Hello everyone'
@@ -66,28 +64,28 @@ Facts GUIDELINES:
 TITLE REQUIREMENTS:
 - Must be catchy and YouTube-optimized
 - 3-5 words maximum"""
-        logging.info(f"Prompt created successfully:: {prompt}")
+        logger_config.info(f"Prompt created successfully:: {prompt}")
         return prompt
     
     except Exception as e:
-        logging.error(f"Error in get_prompt: {e}")
+        logger_config.error(f"Error in get_prompt: {e}")
         return ""
 
 def start():
     try:
         facts = databasecon.execute("SELECT * FROM entries WHERE type = 'facts' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         if facts is None:
-            logging.info("No text puzzle is available")
+            logger_config.info("No text puzzle is available")
             is_data_added = False
             when = 0
             while is_data_added is False:
-                logging.info(f"Getting text from llama...")
+                logger_config.info(f"Getting text from llama...")
                 output = getResponseFromOllama.makeRequest(get_prompt())
                 
                 json_match = re.search(r'\{.*?\}', output, re.DOTALL)
                 if json_match:
                     facts_data = json.loads(json_match.group())
-                    logging.info(f"Facts generated: {facts_data}")
+                    logger_config.info(f"Facts generated: {facts_data}")
 
                     databasecon.execute("""INSERT into entries (audioPath, title, description, thumbnailText, answer, type) VALUES (?, ?, ?, ?, ?, ?)""", ('--', facts_data['title'], facts_data['facts'], facts_data['explaination'], facts_data['answer'], 'facts'))
                     is_data_added = True
@@ -96,7 +94,7 @@ def start():
                     return False
         
         facts = databasecon.execute("SELECT * FROM entries WHERE type = 'facts' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
-        logging.info(f"Starting to create text puzzle... {facts}")
+        logger_config.info(f"Starting to create text puzzle... {facts}")
 
         is_puzzle_shorts = len(databasecon.execute(f"SELECT * FROM entries WHERE id = '{facts[0]}' AND title = '{facts[1]}'")) > 0
 
@@ -120,7 +118,7 @@ def start():
             """, (facts[0],))
 
     except Exception as e:
-        logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)
+        logger_config.error(f"Error in createChessPuzzle::start : {str(e)}")
         return False
 
     return is_success

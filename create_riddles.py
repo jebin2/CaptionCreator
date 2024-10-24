@@ -2,13 +2,10 @@ import json
 import re
 import sqlite3
 import kmcontroller
-from logger_config import setup_logging
+import logger_config
 import requests
 import ollamaresponseparser
 import databasecon
-
-logging = setup_logging()
-
 
 START_WITH = 'Hello everyone'
 
@@ -62,11 +59,11 @@ TITLE REQUIREMENTS:
 - Must be catchy and YouTube-optimized
 - Include words like "How","What","Tricky," or "Can You Solve"
 - 3-5 words maximum"""
-        logging.info(f"Prompt created successfully:: {prompt}")
+        logger_config.info(f"Prompt created successfully:: {prompt}")
         return prompt
     
     except Exception as e:
-        logging.error(f"Error in get_prompt: {e}")
+        logger_config.error(f"Error in get_prompt: {e}")
         return ""
 
 def get_ollama_output():
@@ -85,19 +82,19 @@ def get_ollama_output():
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.info(f"Ollama response content: {content}")
+        logger_config.info(f"Ollama response content: {content}")
 
         # Extract JSON data using regex
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
             riddle_data = json.loads(json_match.group())
-            logging.info(f"Riddle generated: {riddle_data}")
+            logger_config.info(f"Riddle generated: {riddle_data}")
             return riddle_data
         else:
-            logging.warning("No valid JSON format found in the response.")
+            logger_config.warning("No valid JSON format found in the response.")
     
     except Exception as e:
-        logging.error("Error in get_ollama_output: %s", str(e), exc_info=True)
+        logger_config.error("Error in get_ollama_output: %s", str(e))
     
     return None
 
@@ -108,7 +105,7 @@ def start(riddle_data=None):
             hasRiddleAlready = True
         riddle_data = riddle_data if hasRiddleAlready else get_ollama_output()
         if riddle_data:
-            logging.info("Riddle generation succeeded.")
+            logger_config.info("Riddle generation succeeded.")
             riddle_data['audio_path'] = kmcontroller.createAudioAndDownload(getCustomInstruction(riddle_data['answer']), getSource(riddle_data["riddle"]))
 
             if hasRiddleAlready:
@@ -125,6 +122,6 @@ def start(riddle_data=None):
             return True
     
     except Exception as e:
-        logging.error(f"An error occurred in start: {e}")
+        logger_config.error(f"An error occurred in start: {e}")
 
     return False

@@ -1,6 +1,3 @@
-from logger_config import setup_logging
-logging = setup_logging()
-
 import os
 from pathlib import Path
 import logging
@@ -11,6 +8,7 @@ import common
 import time
 import svgtojpg
 import custom_env
+import logger_config
 
 # Constants
 SQUARE_SIZE = 135
@@ -71,7 +69,7 @@ def convert_chess_notation_to_pixels(file: str, rank: str) -> Tuple[int, int]:
         y = TOTAL_SIZE - (int(RANK_TO_NUM[rank]) * SQUARE_SIZE)
         return x, y
     except KeyError as e:
-        logging.error(f"Invalid chess notation: {file}{rank}")
+        logger_config.error(f"Invalid chess notation: {file}{rank}")
         raise ValueError(f"Invalid chess notation: {file}{rank}") from e
 
 def get_piece_details_from_notation(notation: str) -> Tuple[str, int, int]:
@@ -96,7 +94,7 @@ def get_piece_from_coordinates(tree: etree._ElementTree, is_white: bool, notatio
             if notation in child.get('_id', ''):
                 return ID_TO_PIECE.get(child.get('href'))
 
-    logging.error(f"none returned: {notation}")
+    logger_config.error(f"none returned: {notation}")
     return None
 
 def empty_element(element):
@@ -110,9 +108,9 @@ def remove_element_by_id(element, idVal):
             element.remove(child)
 
 def get_modified_content(isCreate, tree, whiteNotationSeparateBySpace, blackNotationSeparateBySpace, removeNotation=None, point=None, removeDestPiece=False):
-    logging.info(f"White:: {whiteNotationSeparateBySpace}")
-    logging.info(f"Black:: {blackNotationSeparateBySpace}")
-    logging.info(f"Remove:: {removeNotation}")
+    logger_config.info(f"White:: {whiteNotationSeparateBySpace}")
+    logger_config.info(f"Black:: {blackNotationSeparateBySpace}")
+    logger_config.info(f"Remove:: {removeNotation}")
     root = tree.getroot()
 
     for type in ['white', 'black']:
@@ -162,12 +160,12 @@ def get_modified_content(isCreate, tree, whiteNotationSeparateBySpace, blackNota
 
 def create_svg(output_file, chess_board, whiteNotationSeparateBySpace, blackNotationSeparateBySpace):
     try:
-        logging.info(f"File Path:: {chess_board}")
+        logger_config.info(f"File Path:: {chess_board}")
         tree = get_modified_content(True, etree.parse(chess_board), whiteNotationSeparateBySpace, blackNotationSeparateBySpace)
         tree.write(output_file, pretty_print=True, xml_declaration=True, encoding="UTF-8")
         svgtojpg.convert_svg_to_jpg(str(output_file), str(output_file).replace(".svg", ".jpg"), DESIRED_WIDTH, DESIRED_HEIGHT)
     except Exception as e:
-        logging.error(f"create_svg : {str(e)}", exc_info=True)
+        logger_config.error(f"create_svg : {str(e)}")
         return None
     return output_file
 
@@ -182,17 +180,17 @@ def pointsToMove(fromX, fromY, toX, toY, noOfP):
         y = fromY + yMean * i
         points.append((round(x), round(y)))
 
-    logging.info(f"Moveing points: {points}")
+    logger_config.info(f"Moveing points: {points}")
     return points
 
 def update_n_create_svg(base_path, isWhiteMove, file_name, notationFromTo, order):
     try:
-        logging.info(f"Move by:: {'White' if isWhiteMove else 'Black'}")
-        logging.info(f"File :: {file_name}")
-        logging.info(f"Notation:: {notationFromTo}")
+        logger_config.info(f"Move by:: {'White' if isWhiteMove else 'Black'}")
+        logger_config.info(f"File :: {file_name}")
+        logger_config.info(f"Notation:: {notationFromTo}")
         fromX, fromY = convert_chess_notation_to_pixels(notationFromTo[0], notationFromTo[1])
         toX, toY = convert_chess_notation_to_pixels(notationFromTo[2], notationFromTo[3])
-        logging.info(f"Move from ({fromX}, {fromY}) - To ({toX}, {toY})")
+        logger_config.info(f"Move from ({fromX}, {fromY}) - To ({toX}, {toY})")
 
         points = pointsToMove(fromX, fromY, toX, toY, custom_env.FPS)
         count = 0
@@ -220,7 +218,7 @@ def update_n_create_svg(base_path, isWhiteMove, file_name, notationFromTo, order
         return output_svg_file
 
     except Exception as e:
-        logging.error(f"update_svg : {str(e)}", exc_info=True)
+        logger_config.error(f"update_svg : {str(e)}")
         return None
 
 def make(data) -> Optional[str]:
@@ -297,7 +295,7 @@ def make(data) -> Optional[str]:
         return custom_env.base_path
         
     except Exception as e:
-        logging.error(f"Error creating chess board: {str(e)}", exc_info=True)
+        logger_config.error(f"Error creating chess board: {str(e)}")
         return None
 
 # if __name__ == "__main__":

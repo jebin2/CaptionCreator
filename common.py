@@ -5,6 +5,7 @@ import shutil
 import string
 import random
 from datetime import datetime, timedelta
+import logger_config
 
 def file_exists(file_path):
     try:

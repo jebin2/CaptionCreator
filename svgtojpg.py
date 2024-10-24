@@ -1,5 +1,6 @@
 import cairosvg
 from PIL import Image
+import logger_config
 
 def convert_svg_to_jpg(svg_file_path, jpg_file_path, width, height):
     try:

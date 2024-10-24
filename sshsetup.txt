@@ -1,0 +1,43 @@
+I see you have two network interfaces on your VM:
+
+enp0s3 with IP <> (NAT adapter)
+enp0s8 - This appears to be active but no IP address is shown
+
+To access your VM via SSH from the host, you'll need to:
+
+First, set up a Host-only or Bridge adapter in VirtualBox:
+
+Shut down the VM
+Go to VM Settings -> Network
+For Adapter 2 (enp0s8), select "Host-only Adapter" or "Bridged Adapter"
+Start the VM
+
+
+Configure the second interface (enp0s8):
+bashCopysudo nano /etc/network/interfaces
+Add:
+Copyauto enp0s8
+iface enp0s8 inet static
+    address 192.168.56.10
+    netmask 255.255.255.0
+
+Apply the network changes:
+bashCopysudo systemctl restart networking
+# or
+sudo ifdown enp0s8 && sudo ifup enp0s8
+
+Verify the IP was assigned:
+bashCopyip addr show enp0s8
+
+Then from your host machine, you can connect:
+bashCopyssh vboxuser@192.168.56.10
+
+
+Would you like me to help you set up any of these steps?
+Note: The ifconfig command isn't found because it's not installed by default on newer Debian systems. You can install it with:
+bashCopysudo apt install net-tools
+
+# ssh login
+    # ssh-keygen -t rsa
+    # ssh-copy-id username@remote_host_ip_or_domain
+    # ssh username@remote_host_ip_or_domain "command_to_execute"

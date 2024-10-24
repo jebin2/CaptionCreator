@@ -1,10 +1,8 @@
-import logger_config
-logging = logger_config.setup_logging()
-
 import json
 import get_daily_fen
 import stockfish
 import common
+import logger_config
 
 def fetchData(when=2):
     puzzle_data = get_daily_fen.fetch_daily_puzzles(when)
@@ -17,11 +15,11 @@ def fetchData(when=2):
                 data['date'] = puzzle_data['date']
                 data['whose_turn'] = 'White' if ' w ' in data['fen'] else 'Black'
                 
-                logging.info(f"\Chess Puzzle: {data}")
+                logger_config.info(f"\Chess Puzzle: {data}")
                 return data
 
     except Exception as e:
-        logging.error(f"Error in chess_puzzle::fetchData : {str(e)}", exc_info=True)
+        logger_config.error(f"Error in chess_puzzle::fetchData : {str(e)}")
 
     return None
 

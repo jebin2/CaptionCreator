@@ -2,13 +2,11 @@ import requests
 import ollamaresponseparser
 import json
 import re
-from logger_config import setup_logging
-
-logging = setup_logging()
+import logger_config
 
 def makeRequest(prompt):
     try:
-        logging.info(f"Prompt: {prompt}")
+        logger_config.info(f"Prompt: {prompt}")
         response = requests.post(ollamaresponseparser.getUrl(), json={
             'model': 'llama3.1',
             'messages': [
@@ -21,7 +19,7 @@ def makeRequest(prompt):
         response.raise_for_status()
 
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.info(f"ollama output {content}")
+        logger_config.info(f"ollama output {content}")
         return content
     
     except Exception as e:

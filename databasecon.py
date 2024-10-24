@@ -1,24 +1,22 @@
-from logger_config import setup_logging
 import sqlite3
-
-logging = setup_logging()
+import logger_config
 
 def execute(query, values=None, type='getAll'):
     conn = None  # Initialize conn variable outside the try block
     try:
-        logging.info("Getting Database Connection...")
+        logger_config.info("Getting Database Connection...")
         conn = sqlite3.connect('ContentData/entries.db')
-        logging.info("Connection Success")
+        logger_config.info("Connection Success")
         cursor = conn.cursor()
 
-        logging.info(f"Trying Query execution query:: {query} value:: {values} Success")
+        logger_config.info(f"Trying Query execution query:: {query} value:: {values} Success")
 
         if values:
             cursor.execute(query, values)
         else:
             cursor.execute(query)
 
-        logging.info(f"Query execution query:: {query} value:: {values} Success")
+        logger_config.info(f"Query execution query:: {query} value:: {values} Success")
 
         if type == 'getAll':
             return cursor.fetchall()  # Return all results for 'get' type
@@ -27,7 +25,7 @@ def execute(query, values=None, type='getAll'):
 
         return None
     except Exception as e:
-        logging.error(f'Error in databasecon.execute:: {str(e)}', exc_info=True)
+        logger_config.error(f'Error in databasecon.execute:: {str(e)}')
     finally:
         if conn:  # Check if conn was successfully created
             conn.commit()

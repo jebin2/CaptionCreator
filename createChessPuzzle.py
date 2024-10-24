@@ -1,6 +1,4 @@
 import logger_config
-logging = logger_config.setup_logging()
-
 import databasecon
 import common
 import chess_board
@@ -90,18 +88,18 @@ def start():
     try:
         chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
         if chess_puzzle is None:
-            logging.info("No chess puzzle is available")
+            logger_config.info("No chess puzzle is available")
             is_data_added = False
             when = 0
             while is_data_added is False:
-                logging.info(f"Getting chess puzzle today - {when}")
+                logger_config.info(f"Getting chess puzzle today - {when}")
                 is_data_added = fetchAndUpdate(when)
                 when += 1
                 if when > 50:
                     return False
         
         chess_puzzle = databasecon.execute("SELECT * FROM entries WHERE type='chess' AND (generatedVideoPath IS NULL OR generatedVideoPath = '')", type='get')
-        logging.info(f"Starting to create chess puzzle... {chess_puzzle}")
+        logger_config.info(f"Starting to create chess puzzle... {chess_puzzle}")
 
         if common.file_exists(chess_puzzle[1]) is False:
             audio_path = getAudioPath(chess_puzzle[3], chess_puzzle[5])
@@ -134,7 +132,7 @@ def start():
             """, (chess_puzzle[0],))
 
     except Exception as e:
-        logging.error(f"Error in createChessPuzzle::start : {str(e)}", exc_info=True)
+        logger_config.error(f"Error in createChessPuzzle::start : {str(e)}")
         return False
 
     return is_success

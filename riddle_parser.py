@@ -2,9 +2,7 @@ import requests
 import ollamaresponseparser
 import json
 import re
-from logger_config import setup_logging
-
-logging = setup_logging()
+import logger_config
 
 def get_prompt(riddle, answer, transcript, verify):
     return f"""
@@ -60,7 +58,7 @@ def get_ollama_output(transcript, riddle, answer):
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.info(f"Ollama response content: {content}")
+        logger_config.info(f"Ollama response content: {content}")
 
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:
@@ -101,7 +99,7 @@ def verify_output(transcript, riddle, answer, riddle_data):
         response.raise_for_status()
         
         content = ollamaresponseparser.getParsedData(response.text)
-        logging.info(f"Ollama response content: {content}")
+        logger_config.info(f"Ollama response content: {content}")
 
         json_match = re.search(r'\{.*?\}', content, re.DOTALL)
         if json_match:

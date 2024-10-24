@@ -1,8 +1,6 @@
 import json
-from logger_config import setup_logging
+import logger_config
 import re
-
-logging = setup_logging()
 
 def getUrl():
     with open('ollamadetails.json', 'r') as file:

@@ -1,6 +1,4 @@
 import logger_config
-logging = logger_config.setup_logging()
-
 import subprocess
 import json
 import argparse
@@ -105,8 +103,8 @@ def stockfish_process(is_white, cmd, stockfish_path="stockfish/stockfish-ubuntu-
         board_visual = convert_to_algebraic_notation(board_visual)
         moves = parse_moves(is_white, moves)
 
-    logging.info(f"chess_board: {board_visual}")
-    logging.info(f"solution: {moves}")
+    logger_config.info(f"chess_board: {board_visual}")
+    logger_config.info(f"solution: {moves}")
 
     return board_visual, moves
 
@@ -115,7 +113,7 @@ def runInHostDef(fen):
     # Construct the command to run the script on the remote host
     ssh_command = f"ssh jebineinstein@172.28.156.132 'python3 /home/jebineinstein/git/CaptionCreator/stockfish.py \"{fen}\"'"
     try:
-        logging.info(f"Executing .. {ssh_command}")
+        logger_config.info(f"Executing .. {ssh_command}")
         # Execute the command on the host
         result = subprocess.run(ssh_command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Decode the output from bytes to string and parse JSON

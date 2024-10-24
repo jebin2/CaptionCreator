@@ -7,9 +7,7 @@ import random
 import sqlite3
 import riddle_parser
 import create_riddles
-from logger_config import setup_logging
-
-logging = setup_logging()
+import logger_config
 
 BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
@@ -23,18 +21,18 @@ SHOW_ANSWER = False
 
 def transcribe_audio(audio_path):
     try:
-        logging.info(f"Starting audio transcription for: {audio_path}")
+        logger_config.info(f"Starting audio transcription for: {audio_path}")
 
         # Load the Whisper model without weights_only parameter
         model = whisper.load_model("base")
-        logging.info("Whisper model loaded successfully")
+        logger_config.info("Whisper model loaded successfully")
 
         result = model.transcribe(audio_path, word_timestamps=True)
-        logging.info(f"Transcription completed successfully for: {audio_path}")
+        logger_config.info(f"Transcription completed successfully for: {audio_path}")
         
         return result['text'], result['segments']
     except Exception as e:
-        logging.error(f"Failed to transcribe audio {audio_path}: {str(e)}", exc_info=True)
+        logger_config.error(f"Failed to transcribe audio {audio_path}: {str(e)}")
         return "", []
 
 
@@ -44,15 +42,15 @@ def get_random_file_name(path, label, n, ext):
         random_number = random.randint(1, n)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         path_with_file_name = os.path.join(script_dir, path, f"{label}_{random_number}.{ext}")
-        logging.info(f"Selected random path_with_file_name: {path_with_file_name}")
+        logger_config.info(f"Selected random path_with_file_name: {path_with_file_name}")
         return path_with_file_name
     except Exception as e:
-        logging.error(f"Error selecting background image: {str(e)}", exc_info=True)
+        logger_config.error(f"Error selecting background image: {str(e)}")
         return ""
 
 def create_text_image(text, background_path, temp_filename, font_path, font_size=70, img_size=(1920, 1080), padding=50, extra_space=100, stroke_width=2, static_text="", bottom_static_text=""):
     """Create an image with bold text, a black border around each letter, and static text at the top and bottom."""
-    logging.info(f"Creating text image with background: {background_path}")
+    logger_config.info(f"Creating text image with background: {background_path}")
     try:
         background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
@@ -157,41 +155,41 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
 
         # Save the image
         background.save(temp_filename)
-        logging.info(f"Text image created and saved to {temp_filename}")
+        logger_config.info(f"Text image created and saved to {temp_filename}")
         return temp_filename
     except Exception as e:
-        logging.error(f"Error creating text image: {str(e)}", exc_info=True)
+        logger_config.error(f"Error creating text image: {str(e)}")
         return ""
 
 def resize_thumbnail(thumbnail_path):
     """Resize and compress the thumbnail image if it's larger than 2 MB."""
-    logging.info(f"Checking thumbnail size: {thumbnail_path}")
+    logger_config.info(f"Checking thumbnail size: {thumbnail_path}")
     max_file_size = 2 * 1024 * 1024  # 2 MB
     try:
         img = Image.open(thumbnail_path)
         file_size = os.path.getsize(thumbnail_path)
         if file_size > max_file_size:
-            logging.info(f"Resizing thumbnail {thumbnail_path}")
+            logger_config.info(f"Resizing thumbnail {thumbnail_path}")
             img.thumbnail((1280, 720))
             quality = 95
             while file_size > max_file_size:
                 img.save(thumbnail_path, format='PNG', quality=quality)
                 file_size = os.path.getsize(thumbnail_path)
                 quality -= 5
-                wait_with_logs(10)
-            logging.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
+                logger_config.info(f"Waiting before new resize", )
+            logger_config.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
         else:
-            logging.info(f"Thumbnail {thumbnail_path} is within size limits")
+            logger_config.info(f"Thumbnail {thumbnail_path} is within size limits")
         return thumbnail_path
     except Exception as e:
-        logging.error(f"Error resizing thumbnail: {str(e)}", exc_info=True)
+        logger_config.error(f"Error resizing thumbnail: {str(e)}")
         return thumbnail_path
 
 def show_answer(end, total_duration, sentence, bottom_static_text):
     global SHOW_ANSWER
     is_sentence_contains_bottom_text = bottom_static_text.lower() in sentence.lower()
     SHOW_ANSWER = SHOW_ANSWER or is_sentence_contains_bottom_text
-    logging.info(f"Show answer status: {SHOW_ANSWER}")
+    logger_config.info(f"Show answer status: {SHOW_ANSWER}")
     return SHOW_ANSWER
 
 def find_segment_time(sentence, segments, type, checkAfterSegment):
@@ -221,11 +219,11 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
 
 
 def create_video_from_audio(audio_path):
-    logging.info(f"Starting video creation for audio: {audio_path}")
+    logger_config.info(f"Starting video creation for audio: {audio_path}")
     
     transcript, segments = transcribe_audio(audio_path)
     if not transcript:
-        logging.error("No transcript generated. Cannot create video.")
+        logger_config.error("No transcript generated. Cannot create video.")
         return
     
     # Retrieve metadata from the database
@@ -239,19 +237,19 @@ def create_video_from_audio(audio_path):
     # Process transcript with riddle_parser (which should add --#start#--, --#answer#--, --#end#--)
     transcript = riddle_parser.process_convo_text(transcript, top_static_text, bottom_static_text)
     if transcript is None:
-        logging.error("No transcript generated. Cannot create video.")
+        logger_config.error("No transcript generated. Cannot create video.")
         return
     
     highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
                                         .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
                                         .replace('--#answer#--', '\033[1;34m--#answer#--\033[0m')
-    logging.info(f"Parsed transcript: {highlighted_transcript}")
+    logger_config.info(f"Parsed transcript: {highlighted_transcript}")
 
     # Extract file name for output
     filename = os.path.basename(audio_path)
     output_filename = filename.replace(".wav", ".mp4")
     
-    logging.info(f"Retrieved metadata: thumbnailText='{thumbnailText}', top_static_text='{top_static_text}', bottom_static_text='{bottom_static_text}'")
+    logger_config.info(f"Retrieved metadata: thumbnailText='{thumbnailText}', top_static_text='{top_static_text}', bottom_static_text='{bottom_static_text}'")
     
     # Load background image
     background_path = get_random_file_name(BACKGROUND_PATH, BACKGROUND_LABEL, BACKGROUND_IMAGES_N, BACKGROUND_EXT)
@@ -277,7 +275,7 @@ def create_video_from_audio(audio_path):
             show_ans_segment = find_segment_time(sentence, segments, "start", start_segment)
 
     # if start_segment is None or end_segment is None:
-    #     logging.error(f"Could not determine valid start and end times for trimming. Check transcript markers. {start_segment} and {end_segment}")
+    #     logger_config.error(f"Could not determine valid start and end times for trimming. Check transcript markers. {start_segment} and {end_segment}")
         trimmed_audio = audio  # Keep the original audio if times are invalid
     # else:
     #     trimmed_audio = audio.subclip(start_segment["start"], end_segment["end"])  # Trim the audio if both times are valid
@@ -311,13 +309,13 @@ def create_video_from_audio(audio_path):
             clip = ImageClip(temp_image_path).set_duration(duration).set_start(segment["start"])
             txt_clips.append(clip)
             os.remove(temp_image_path)
-            logging.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
+            logger_config.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
 
         except Exception as e:
-            logging.error(f"Error creating text clip: {str(e)}", exc_info=True)
+            logger_config.error(f"Error creating text clip: {str(e)}")
     
     if not txt_clips:
-        logging.error("No text clips could be created. Cannot generate video.")
+        logger_config.error("No text clips could be created. Cannot generate video.")
         return
 
     # Combine subtitle clips and audio into a single video
@@ -326,9 +324,9 @@ def create_video_from_audio(audio_path):
 
     # Output video file
     output_path = os.path.join("video", output_filename)
-    logging.info(f"Rendering video: {output_path}")
+    logger_config.info(f"Rendering video: {output_path}")
     video.write_videofile(output_path, fps=24)
-    logging.info(f"Video saved as {output_path}")
+    logger_config.info(f"Video saved as {output_path}")
     
     # Generate and save the thumbnail
     thumbnail_filename = f"{os.path.splitext(output_filename)[0]}-thumbnail.png"
@@ -342,9 +340,9 @@ def create_video_from_audio(audio_path):
             static_text="",
             bottom_static_text=""
         )
-        logging.info(f"Thumbnail created: {thumbnail_path}")
+        logger_config.info(f"Thumbnail created: {thumbnail_path}")
     except Exception as e:
-        logging.error(f"Error generating thumbnail: {str(e)}", exc_info=True)
+        logger_config.error(f"Error generating thumbnail: {str(e)}")
     
     # Resize the thumbnail
     resize_thumbnail(thumbnail_path)
@@ -352,7 +350,7 @@ def create_video_from_audio(audio_path):
 
 def update_video_generated(audio_path, video_path, thumbnail_path):
     """Update the database to mark the video as generated and set the video and thumbnail paths."""
-    logging.info(f"Updating database for audio: {audio_path}")
+    logger_config.info(f"Updating database for audio: {audio_path}")
     try:
         conn = sqlite3.connect('ContentData/entries.db')
         cursor = conn.cursor()
@@ -363,13 +361,13 @@ def update_video_generated(audio_path, video_path, thumbnail_path):
         """, (video_path, thumbnail_path, audio_path))
         conn.commit()
         conn.close()
-        logging.info(f"Database updated: videoPath={video_path}, thumbnailPath={thumbnail_path}")
+        logger_config.info(f"Database updated: videoPath={video_path}, thumbnailPath={thumbnail_path}")
     except Exception as e:
-        logging.error(f"Error updating database: {str(e)}", exc_info=True)
+        logger_config.error(f"Error updating database: {str(e)}")
 
 def check_for_new_entries():
     """Check the database for new entries and process them."""
-    logging.info("Starting to check for new entries")
+    logger_config.info("Starting to check for new entries")
     conn = sqlite3.connect('ContentData/entries.db')
     cursor = conn.cursor()
     
@@ -379,25 +377,14 @@ def check_for_new_entries():
         print(f"new_entries : {new_entries}")
         for (audio_path,) in new_entries:
             if os.path.exists(audio_path):
-                logging.info(f"Processing new entry: {audio_path}")
+                logger_config.info(f"Processing new entry: {audio_path}")
                 create_video_from_audio(audio_path)
             else:
-                logging.warning(f"Audio file not found: {audio_path}")
+                logger_config.warning(f"Audio file not found: {audio_path}")
 
-        wait_with_logs(10)  # Sleep for a while before checking again
+        logger_config.info(f"Waiting before new entries", )
         create_riddles.start()
 
-def wait_with_logs(seconds):
-    """Wait for a specified number of seconds, logging the countdown."""
-    try:
-        logging.info(f"Waiting for {seconds} seconds.")
-        for i in range(seconds, 0, -1):
-            logging.info(f"Wait time remaining: {i} seconds.")
-            time.sleep(1)
-        logging.info("Wait period finished.")
-    except Exception as e:
-        logging.error(f"Error during wait: {str(e)}")
-
 # if __name__ == "__main__":
-#     logging.info("Starting video generation script")
+#     logger_config.info("Starting video generation script")
 #     check_for_new_entries()

@@ -14,8 +14,6 @@ import databasecon
 import common
 import custom_env
 
-logging = logger_config.setup_logging()
-
 BACKGROUND_IMAGES_N = 11  # Total number of background images available
 BACKGROUND_LABEL = 'background'
 BACKGROUND_PATH = 'background_images'
@@ -36,10 +34,10 @@ def get_random_file_name(path, label, n, ext, type=''):
         random_number = random.randint(1, n)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         path_with_file_name = os.path.join(script_dir, path, f"{label}_{random_number}.{ext}")
-        logging.info(f"Selected random path_with_file_name: {path_with_file_name}")
+        logger_config.info(f"Selected random path_with_file_name: {path_with_file_name}")
         return path_with_file_name
     except Exception as e:
-        logging.error(f"Error selecting background image: {str(e)}", exc_info=True)
+        logger_config.error(f"Error selecting background image: {str(e)}")
         return ""
 
 def find_segment_time(sentence, segments, type, checkAfterSegment):
@@ -68,7 +66,7 @@ def find_segment_time(sentence, segments, type, checkAfterSegment):
     return None
 
 def create_text_image(text, background_path, temp_filename, font_path, font_size=70, padding=50, extra_space=100, stroke_width=2, description="", answer="", img_size=IMAGE_SIZE, type='text'):
-    logging.info(f"Creating text image with background: {background_path}")
+    logger_config.info(f"Creating text image with background: {background_path}")
     try:
         background = Image.open(background_path).resize(img_size)
         draw = ImageDraw.Draw(background)
@@ -176,48 +174,48 @@ def create_text_image(text, background_path, temp_filename, font_path, font_size
 
         # Save the image
         background.save(temp_filename)
-        logging.info(f"Text image created and saved to {temp_filename}")
+        logger_config.info(f"Text image created and saved to {temp_filename}")
         return temp_filename
     except Exception as e:
-        logging.error(f"Error creating text image: {str(e)}", exc_info=True)
+        logger_config.error(f"Error creating text image: {str(e)}")
         return ""
 
 def resize_thumbnail(thumbnail_path):
     """Resize and compress the thumbnail image if it's larger than 2 MB."""
-    logging.info(f"Checking thumbnail size: {thumbnail_path}")
+    logger_config.info(f"Checking thumbnail size: {thumbnail_path}")
     max_file_size = 2 * 1024 * 1024  # 2 MB
     try:
         img = Image.open(thumbnail_path)
         file_size = os.path.getsize(thumbnail_path)
         if file_size > max_file_size:
-            logging.info(f"Resizing thumbnail {thumbnail_path}")
+            logger_config.info(f"Resizing thumbnail {thumbnail_path}")
             img.thumbnail((1280, 720))
             quality = 95
             while file_size > max_file_size:
                 img.save(thumbnail_path, format='PNG', quality=quality)
                 file_size = os.path.getsize(thumbnail_path)
                 quality -= 5
-                logger_config.wait_with_logs(10, f'for rezising image; {file_size} max_file_size: {max_file_size}')
-            logging.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
+                logger_config.info(f'for rezising image; {file_size} max_file_size: {max_file_size}', 10)
+            logger_config.info(f"Resized thumbnail to {file_size / 1024:.2f} KB with quality {quality}%")
         else:
-            logging.info(f"Thumbnail {thumbnail_path} is within size limits")
+            logger_config.info(f"Thumbnail {thumbnail_path} is within size limits")
         return thumbnail_path
     except Exception as e:
-        logging.error(f"Error resizing thumbnail: {str(e)}", exc_info=True)
+        logger_config.error(f"Error resizing thumbnail: {str(e)}")
         return thumbnail_path
 
 def process(id, audio_path=None, startWith = None):
-    logging.info(f"Processing audio:: {audio_path}")
+    logger_config.info(f"Processing audio:: {audio_path}")
     if common.file_exists(audio_path) is False:
         return False
     transcript, segments = retrieveText.parse(audio_path)
     if not transcript:
-        logging.error("No transcript generated. Cannot create video.")
+        logger_config.error("No transcript generated. Cannot create video.")
         return False
     
     if startWith and not transcript.strip().startswith(startWith):
-        logging.error(f"Generated transcript from NotebookLLM is not correct. Try again... {transcript} ::: {startWith}")
-        logging.error(f"index:: {transcript.index(startWith)}")
+        logger_config.error(f"Generated transcript from NotebookLLM is not correct. Try again... {transcript} ::: {startWith}")
+        logger_config.error(f"index:: {transcript.index(startWith)}")
         return False
 
     result = databasecon.execute("SELECT thumbnailText, description, answer, type FROM entries WHERE id = ?", (id,), type='get')
@@ -226,13 +224,13 @@ def process(id, audio_path=None, startWith = None):
 
     transcript = riddle_parser.process_convo_text(transcript, description, answer)
     if transcript is None:
-        logging.error("No transcript generated. Cannot create video.")
+        logger_config.error("No transcript generated. Cannot create video.")
         return False
     
     highlighted_transcript = transcript.replace('--#start#--', '\033[1;32m--#start#--\033[0m') \
                                         .replace('--#end#--', '\033[1;31m--#end#--\033[0m') \
                                         .replace('--#answer#--', '\033[1;34m--#answer#--\033[0m')
-    logging.info(f"Parsed transcript: {highlighted_transcript}")
+    logger_config.info(f"Parsed transcript: {highlighted_transcript}")
 
     # Extract file name for output
     output_filename = f"{common.generate_random_string()}.mp4"
@@ -242,7 +240,7 @@ def process(id, audio_path=None, startWith = None):
     audio = AudioFileClip(audio_path)
 
     if audio.duration > 30 and type == 'facts':
-        logging.error(f"facts cannot be more than 60 sec: {audio.duration}")
+        logger_config.error(f"facts cannot be more than 60 sec: {audio.duration}")
         return False
 
     # Split transcript into sentences and calculate total words
@@ -283,12 +281,12 @@ def process(id, audio_path=None, startWith = None):
         txt_clips.append(clip)
         os.remove(temp_image_path)
 
-        logging.info(f"Clip created for file {temp_image_path} start at 0")
+        logger_config.info(f"Clip created for file {temp_image_path} start at 0")
 
-        logging.info(f"Getting Chess move files...")
+        logger_config.info(f"Getting Chess move files...")
         files = common.list_files_recursive(custom_env.CHESS_MOVES_PATH)
         filtered_files = [file for file in files if file.endswith('.jpg')]
-        logging.info(f"Success.")
+        logger_config.info(f"Success.")
 
         secondCount = 0
         # move_duration = round((end_time-4 - start_show_answer)/len(filtered_files), 2)
@@ -313,7 +311,7 @@ def process(id, audio_path=None, startWith = None):
                     txt_clips.append(clip)
                     os.remove(temp_image_path)
 
-                    logging.info(f"Clip created for file {temp_image_path} start at {start_show_answer}")
+                    logger_config.info(f"Clip created for file {temp_image_path} start at {start_show_answer}")
                     secondCount += move_duration  # Increment for the next clip duration
                 else:
                     can_break = True
@@ -342,26 +340,26 @@ def process(id, audio_path=None, startWith = None):
                 txt_clips.append(clip)
 
                 os.remove(temp_image_path)
-                logging.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
+                logger_config.info(f"Created text:{segment['text']} clip for time range: {segment['start']} - {segment['end']} duration: {duration}")
 
             except Exception as e:
-                logging.error(f"Error creating text clip: {str(e)}", exc_info=True)
+                logger_config.error(f"Error creating text clip: {str(e)}")
         
         if not txt_clips:
-            logging.error("No text clips could be created. Cannot generate video.")
+            logger_config.error("No text clips could be created. Cannot generate video.")
             return False
     
-    logging.info(f"Combining audio {len(txt_clips)}")
+    logger_config.info(f"Combining audio {len(txt_clips)}")
     # Combine subtitle clips and audio into a single video
     subtitles_clip = CompositeVideoClip(txt_clips)
-    logging.info(f"Combining audio Done")
+    logger_config.info(f"Combining audio Done")
     video = CompositeVideoClip([subtitles_clip.set_audio(audio)])  # Use trimmed audio here
 
     # Output video file
     output_path = os.path.join("video", output_filename)
-    logging.info(f"Rendering video: {output_path}")
+    logger_config.info(f"Rendering video: {output_path}")
     video.write_videofile(output_path, fps=custom_env.FPS)
-    logging.info(f"Video saved as {output_path}")
+    logger_config.info(f"Video saved as {output_path}")
     
     # Generate and save the thumbnail
     thumbnail_filename = f"{os.path.splitext(output_filename)[0]}-thumbnail.png"
@@ -380,9 +378,9 @@ def process(id, audio_path=None, startWith = None):
                 img_size=IMAGE_SIZE[::-1] if type == "facts" else IMAGE_SIZE
             )
 
-        logging.info(f"Thumbnail created: {thumbnail_path}")
+        logger_config.info(f"Thumbnail created: {thumbnail_path}")
     except Exception as e:
-        logging.error(f"Error generating thumbnail: {str(e)}", exc_info=True)
+        logger_config.error(f"Error generating thumbnail: {str(e)}")
     
     # Resize the thumbnail
     resize_thumbnail(thumbnail_path)

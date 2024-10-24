@@ -5,6 +5,7 @@ import json
 import kmcontroller
 import convertToVideo
 import logger_config
+import common
 
 START_WITH = 'Did you know'
 RIDDLE_SHORTS_START_WITH = 'Hello everyone'
@@ -102,20 +103,7 @@ def start():
         
         is_success = convertToVideo.process(facts[0], autio_path, RIDDLE_SHORTS_START_WITH if is_puzzle_shorts else START_WITH)
         
-        if is_success:
-            databasecon.execute("""
-                    UPDATE entries 
-                    SET audioPath = 'Done'
-                    WHERE id = ?
-                """, (facts[0],))
-        else:
-            databasecon.execute("""
-                UPDATE entries 
-                    SET audioPath = 'Failed',
-                    generatedVideoPath = '',
-                    generatedThumbnailPath = ''
-                WHERE id = ?
-            """, (facts[0],))
+        common.update_database_status(facts[0], is_success)
 
     except Exception as e:
         logger_config.error(f"Error in createChessPuzzle::start : {str(e)}")

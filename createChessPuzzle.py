@@ -116,20 +116,7 @@ def start():
 
         is_success = convertToVideo.process(chess_puzzle[0], chess_puzzle[1], START_WITH)
 
-        if is_success:
-            databasecon.execute("""
-                    UPDATE entries 
-                    SET audioPath = 'Done'
-                    WHERE id = ?
-                """, (chess_puzzle[0],))
-        else:
-            databasecon.execute("""
-                UPDATE entries 
-                    SET audioPath = 'Failed',
-                    generatedVideoPath = '',
-                    generatedThumbnailPath = ''
-                WHERE id = ?
-            """, (chess_puzzle[0],))
+        common.update_database_status(chess_puzzle[0], is_success)
 
     except Exception as e:
         logger_config.error(f"Error in createChessPuzzle::start : {str(e)}")

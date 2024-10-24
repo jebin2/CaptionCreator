@@ -82,16 +82,53 @@ def upload_video_to_youtube(video_path, thumbnail_path, title, description, type
 
     youtube = get_youtube_service(type)
 
+    start_desc = ''
+    if 'text' == type:
+        start_desc = f"Puzzle: {description}"
+    if 'chess' == type:
+        start_desc = f"Puzzle: {description}\nhttps://www.chess.com/daily-chess-puzzle/{title[-10:]}"
+    if 'facts' == type:
+        start_desc += f"Puzzle: {description}"
+        if riddle_shorts:
+            start_desc += f"Puzzle: {description}\n Solution:https://www.youtube.com/watch?v={old_video_id}"
+
     # Set the video details
-    final_des = f"{description}\n\n#riddle #thinking #fun #challenges #challenge"
+    final_des = f"""{start_desc}
+
+Welcome to Think Solve Now – Your Ultimate Destination for Riddles, Puzzles, and Chess Challenges!
+
+Are you ready to challenge your mind with brain teasers, riddles, and chess puzzles? On this channel, we dive into intriguing riddles, clever puzzles, and fun chess challenges that will push your critical thinking and strategy skills to the limit. Whether you love logic puzzles, word riddles, or solving chess positions, we’ve got something for everyone!
+
+In each video, we’ll present a new puzzle or chess scenario, give you a chance to solve it, and then break down the solution step by step. From classic riddles to tricky chess puzzles, this channel is perfect for curious minds, chess lovers, and puzzle enthusiasts alike.
+
+🔍 Why Subscribe?
+
+- Fresh riddles, puzzles, and chess challenges uploaded regularly.
+- Step-by-step explanations to enhance both your problem-solving and chess skills.
+- Interactive puzzles designed to engage and challenge your mind.
+- Perfect for anyone who enjoys mental challenges, brain workouts, and chess strategy.
+
+🧩 Topics We Cover:
+
+Logic riddles
+- Math puzzles
+- Lateral thinking puzzles
+- Chess puzzles and tactics
+- Brain teasers
+- Wordplay and conundrums
+
+♟️ Chess Enthusiasts:
+
+- Dive into chess puzzles that sharpen your game strategy.
+- Solve complex positions and learn how to outsmart your opponent.
+
+💡 Join our community of puzzle solvers and chess lovers today! Hit that subscribe button and ring the bell for notifications so you never miss a challenge!
+
+#Riddles #Puzzles #ChessPuzzles #BrainTeasers #MindGames #LogicPuzzles #ChessTactics #CriticalThinking #ProblemSolving #LateralThinking #Quiz #PuzzleLovers #BrainGames #ThinkSolveNow
+"""
     tags = ['riddle', 'thinking', 'fun', 'challenges']
-    if 'Chess' in title:
-        final_des = f"{description}\n\n#chess #chesspuzzle #challenge\n\nhttps://www.chess.com/daily-chess-puzzle/{title[-10:]}"
     
     if 'facts' == type:
-        final_des = "#shorts #interesting"
-        if riddle_shorts:
-            final_des += f"\n\n https://www.youtube.com/watch?v={old_video_id}"
         tags.append("shorts")
 
     request_body = {

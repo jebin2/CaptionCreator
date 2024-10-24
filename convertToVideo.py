@@ -204,7 +204,7 @@ def resize_thumbnail(thumbnail_path):
         logger_config.error(f"Error resizing thumbnail: {str(e)}")
         return thumbnail_path
 
-def process(id, audio_path=None, startWith = None):
+def process(id, audio_path=None, startWith = None, puzzle_start_w_title=None):
     logger_config.info(f"Processing audio:: {audio_path}")
     if common.file_exists(audio_path) is False:
         return False
@@ -321,14 +321,26 @@ def process(id, audio_path=None, startWith = None):
     else:
         for i, segment in enumerate(segments):
             try:
-                # If near the answer, show the bottom static text
+                final_desc = ''
+                final_answer = ''
+                if type == 'text':
+                    final_desc = description
+                    if segment["start"] >= show_ans_segment["start"]:
+                        final_answer = answer
+                if puzzle_start_w_title and type == 'long_form_text':
+                    for details in puzzle_start_w_title:
+                        if segment['start'] >= details['start'] or segment['end'] <= details['end']:
+                            final_desc = details['text']
+                            logger_config.info(f"final_desc:: {final_desc}, start:: {details['start']}, end:: {details['start']}")
+                            break
+
                 temp_image_path = create_text_image(
                     segment["text"], 
                     background_path,
                     TEMP_FILENAME,
                     font_path,
-                    description='' if type == 'facts' else description,
-                    answer="" if type == 'facts' or show_ans_segment is None or segment is None or show_ans_segment["start"] > segment["start"] else answer,
+                    description=final_desc,
+                    answer=final_answer,
                     img_size=IMAGE_SIZE[::-1] if type == "facts" else IMAGE_SIZE
                 )
                 if i < len(segments) - 1:
